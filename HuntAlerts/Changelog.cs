@@ -8,10 +8,10 @@ namespace HuntAlerts
 
         public static readonly Entry[] Entries =
         {
-            new("1.4.1.7",
+            new("1.4.1.8",
                 Features: new[]
                 {
-                    "Per Character configurations are the new big thing here",
+                    "Per Character configurations",
                     "- Relay channels are now defined for each character, and CWLS are now saved per region as well.",
                     "The Datacenter name can now included in notifications",
                     "Relative timestamps from Discord posts are now supported in notifications",
