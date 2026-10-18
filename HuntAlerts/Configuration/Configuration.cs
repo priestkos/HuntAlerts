@@ -4,6 +4,8 @@ using Dalamud.Plugin;
 using System;
 using ECommons.DalamudServices;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace HuntAlerts
 {
@@ -36,6 +38,38 @@ namespace HuntAlerts
         };
     }
 
+    public class PlayerConfig
+    {
+        public string PlayerName { get; set; } = Svc.PlayerState.CharacterName;
+        public string HomeWorld { get; set; } = "";
+        public HashSet<string> RelayChannels { get; set; } = new HashSet<string>();
+
+        public Dictionary<uint, HashSet<string>> _RegionCWLSChannels { get; set; } = new Dictionary<uint, HashSet<string>>();
+        
+
+        [JsonIgnore]
+        public HashSet<string> RegionCWLSChannels
+        {
+            get
+            {
+                if (!Svc.PlayerState.IsLoaded) new HashSet<string>();
+                var region = Svc.PlayerState?.CurrentWorld.Value.DataCenter.Value.Region.RowId;
+                if (region == null) return new HashSet<string>();
+                if (!_RegionCWLSChannels.TryGetValue((uint)region, out var cwchannels))
+                {
+                    cwchannels = new HashSet<string>();
+                    _RegionCWLSChannels.Add((uint)region, cwchannels);
+                }
+                return cwchannels;
+            }
+        }
+
+        [JsonIgnore]
+        public HashSet<string> AllRelayChannels => RelayChannels.Concat(RegionCWLSChannels).ToHashSet();
+        public bool RegionLock { get; set; } = true;
+        
+    }
+
     [Serializable]
     public class Configuration : IPluginConfiguration
     {
@@ -49,6 +83,7 @@ namespace HuntAlerts
         public bool UseDalamudChat { get; set; } = true;
         public XivChatType OutputChat { get; set; } = (XivChatType)56;
         public bool OpenMapOnArrival { get; set; } = true;
+        public bool ShowDatacenterInNotification { get; set; } = false;
         public int SoundEffect { get; set; } = 0;
         public bool UseCustomTrainSound { get; set; } = false;
         public float CustomTrainSoundVolume { get; set; } = 0.7f;
@@ -77,6 +112,33 @@ namespace HuntAlerts
 
         public int SnoozeDefaultMinutes { get; set; } = 30;
         public string DefaultRelayChannel { get; set; } = "/p";
+
+        public Dictionary<ulong, PlayerConfig> _PlayerConfig { get; set; } = new();
+
+        [JsonIgnore]
+        public PlayerConfig PlayerConfig
+        {
+            get
+            {
+                var cid = Svc.PlayerState.ContentId;
+
+                if (!_PlayerConfig.TryGetValue(cid, out var playerConfig))
+                {
+                    playerConfig = new();
+                    _PlayerConfig.Add(cid, playerConfig);
+                }
+
+                var name = Svc.PlayerState.CharacterName;
+                var world = Svc.PlayerState.HomeWorld.ValueNullable?.Name.ToString();
+                if (!string.IsNullOrEmpty(name)) playerConfig.PlayerName = name;
+                if (!string.IsNullOrEmpty(world)) playerConfig.HomeWorld = world;
+                return playerConfig;
+            }
+        }
+
+
+
+        public bool EchoTestRelay { get; set; } = false;
         public bool RelayFlagLink { get; set; } = true;
         public bool WorldArrowEnabled { get; set; } = true;
         public bool ArrowChatPickup { get; set; } = true;

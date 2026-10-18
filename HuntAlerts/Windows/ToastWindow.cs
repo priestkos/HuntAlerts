@@ -1,6 +1,7 @@
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
 using HuntAlerts.Helpers;
+using HuntAlerts.Messaging;
 using HuntAlerts.Services;
 using System;
 using System.Numerics;
@@ -127,18 +128,19 @@ public class ToastWindow : Window
     public override void Draw()
     {
         bool   isTrain;
-        string kind, world, time;
+        string kind, world, time, dc;
 
         if (msg != null)
         {
             isTrain = msg.huntType == "new_hunt";
             kind    = string.IsNullOrEmpty(msg.huntKind)    ? "Hunt" : msg.huntKind;
             world   = msg.huntWorld    ?? "";
+            dc      = HuntAlerts.C.ShowDatacenterInNotification ? (HuntAlertFilter.DatacenterOf(world) ?? "") : "";
             time    = msg.Posted_Time  ?? "";
         }
         else if (PositionMode)
         {
-            isTrain = true; kind = "Dawntrail"; world = "Hyperion"; time = "12:00 PM";
+            isTrain = true; kind = "Dawntrail"; world = "Hyperion"; time = "12:00 PM"; dc = HuntAlerts.C.ShowDatacenterInNotification ? "Home" : "";
         }
         else return;
 
@@ -197,12 +199,14 @@ public class ToastWindow : Window
         ImGui.SameLine();
         Text($"{kind} {(isTrain ? "train" : "S Rank")}", Theme.Text);
 
-        if (!string.IsNullOrEmpty(world))
+        if (!string.IsNullOrEmpty(world) && !string.IsNullOrEmpty(dc))
         {
             ImGui.SameLine();
             Text("·", Theme.Subtle);
             ImGui.SameLine();
             Badge(world, BadgeStyle.World);
+            ImGui.SameLine();
+            Badge(dc, BadgeStyle.SRank);
         }
 
         if (!string.IsNullOrEmpty(time))

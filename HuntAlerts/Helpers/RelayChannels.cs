@@ -3,6 +3,7 @@ using ECommons.DalamudServices;
 using ECommons.Logging;
 using ECommons.Schedulers;
 using System;
+using System.Globalization;
 using System.Text;
 
 namespace HuntAlerts.Helpers;
@@ -54,36 +55,13 @@ public static class RelayChannels
         return 3;
     }
 
-    public static void RelayMessage(HuntTrainMessage entry, string channelCommand)
+    public static void RelayMessage(HuntTrainMessage entry, string channelCommand, bool withFlag)
     {
         if (entry == null) return;
 
-        var wantFlag = HuntAlerts.C.RelayFlagLink
-                      && entry.startTerritoryTypeId != 0
-                      && !(entry.mapLocationX == 0f && entry.mapLocationY == 0f);
-
-        if (!wantFlag)
-        {
-            Svc.Framework.RunOnFrameworkThread(() => Send(entry, channelCommand, false));
-            return;
-        }
-
-
-        Svc.Framework.RunOnFrameworkThread(() =>
-        {
-            try
-            {
-                MapManager.OpenMapWithMarker(entry.startTerritoryTypeId, entry.mapLocationX, entry.mapLocationY);
-            }
-            catch (Exception ex)
-            {
-                PluginLog.Warning($"Relay flag set failed ({channelCommand}): {ex.Message}");
-            }
-        });
         new TickScheduler(() =>
         {
-            Send(entry, channelCommand, true);
-            MapManager.CloseMap();
+            Send(entry, channelCommand, withFlag);
         }, 40);
     }
 
@@ -91,7 +69,7 @@ public static class RelayChannels
     {
         var text = BuildRelayText(entry, withFlag);
         if (string.IsNullOrWhiteSpace(text)) return;
-        var line = $"{channelCommand} {text}";
+        var line = $"{(HuntAlerts.C.EchoTestRelay ? "/echo " : "")}{channelCommand} {text}";
         if (line.Length > 500) line = line.Substring(0, 500);
         try
         {
@@ -106,43 +84,31 @@ public static class RelayChannels
 
     private static string BuildRelayText(HuntTrainMessage entry, bool useFlag)
     {
-        var isTrain  = entry.huntType == "new_hunt";
-        var kind     = CleanOrFallback(entry.huntKind, "Hunt");
-        var world    = Clean(entry.huntWorld);
-        var creature = Clean(entry.creatureName);
-        var zone     = Clean(entry.startZone);
-        var coords  = Clean(entry.locationCoords);
-        var ae      = Clean(entry.startLocation);
-        var inst    = entry.instance > 1 ? $" i{entry.instance}" : "";
+        var isTrain = entry.huntType == "new_hunt";
+        var world = Clean(entry.huntWorld);
+        var showinst = Svc.ClientState.TerritoryType == entry.startTerritoryTypeId ? entry.instance != Svc.ClientState.Instance : entry.instance > 1;
+        var inst = showinst ? $" i{entry.instance}" : "";
 
-        var label = isTrain ? "train" : "S Rank";
+        var loc = useFlag ? "<flag>" : PlainLocation(entry);
 
         var sb = new StringBuilder();
-        sb.Append(kind).Append(' ').Append(label);
-        if (!isTrain && !string.IsNullOrEmpty(creature)) sb.Append(' ').Append(creature);
-        if (!string.IsNullOrEmpty(world)) sb.Append(" on ").Append(world);
-        sb.Append('!');
+        if (isTrain)
+            sb.Append($"{world} TRAIN: {loc}{inst}");
+        else
+            sb.Append($"S Rank {world}: {loc}{inst}");
 
-        var hasZone   = !string.IsNullOrEmpty(zone);
-        var coordPart = useFlag ? "<flag>" : (!string.IsNullOrEmpty(coords) ? $"({coords})" : "");
-        if (hasZone || coordPart.Length > 0)
-        {
-            sb.Append(' ');
-            if (hasZone) sb.Append(zone);
-            if (coordPart.Length > 0)
-            {
-                if (hasZone) sb.Append(' ');
-                sb.Append(coordPart);
-            }
-            sb.Append(inst);
-        }
-        else if (inst.Length > 0)
-        {
-            sb.Append(inst);
-        }
-
-        if (!string.IsNullOrEmpty(ae)) sb.Append(" - ").Append(ae);
         return sb.ToString();
+    }
+
+    private static string PlainLocation(HuntTrainMessage entry)
+    {
+        var zone = Clean(entry.startZone);
+        var hasCoords = !(entry.mapLocationX == 0f && entry.mapLocationY == 0f);
+        var coords = hasCoords
+            ? $"({entry.mapLocationX.ToString("F2", CultureInfo.InvariantCulture)}, {entry.mapLocationY.ToString("F2", CultureInfo.InvariantCulture)})"
+            : "";
+        if (zone.Length > 0 && coords.Length > 0) return $"{zone} {coords}";
+        return zone.Length > 0 ? zone : coords;
     }
 
     private static string Clean(string s)
@@ -152,11 +118,5 @@ public static class RelayChannels
         if (t.Equals("invalid", StringComparison.OrdinalIgnoreCase)) return "";
         if (t.Equals("unknown", StringComparison.OrdinalIgnoreCase)) return "";
         return t;
-    }
-
-    private static string CleanOrFallback(string s, string fallback)
-    {
-        var c = Clean(s);
-        return string.IsNullOrEmpty(c) ? fallback : c;
     }
 }

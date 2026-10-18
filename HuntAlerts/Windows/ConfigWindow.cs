@@ -36,7 +36,7 @@ public class ConfigWindow : Window, IDisposable
     private Page _current = Page.HuntTrains;
     private string _worldSearch = "";
     private string _srankWorldSearch = "";
-    private bool _debugUnlocked = false;
+    private bool _debugUnlocked = true;
 
     private readonly FileDialogManager _fileDialog = new();
     private string _soundResult = "";
@@ -240,6 +240,12 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Flag Map automatically on arrival", ref flag))
         { HuntAlerts.C.OpenMapOnArrival = flag; HuntAlerts.C.Save(); }
 
+        var showDc = HuntAlerts.C.ShowDatacenterInNotification;
+        if (ImGui.Checkbox("Show data center in notifications", ref showDc))
+        { HuntAlerts.C.ShowDatacenterInNotification = showDc; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Include the hunt's data center name in the chat alert and toast banner.");
+
         var hideInDuty = HuntAlerts.C.HideAlertsInDuty;
         if (ImGui.Checkbox("Hide alerts while in a duty", ref hideInDuty))
         { HuntAlerts.C.HideAlertsInDuty = hideInDuty; HuntAlerts.C.Save(); }
@@ -313,14 +319,77 @@ public class ConfigWindow : Window, IDisposable
 
         var relayNames = RelayChannels.All.Select(c => $"{c.Display}  {c.Command}").ToArray();
         var relayIdx   = RelayChannels.IndexOfCommand(HuntAlerts.C.DefaultRelayChannel);
-        if (ImGui.Combo("Default Relay Channel", ref relayIdx, relayNames, relayNames.Length))
-        { HuntAlerts.C.DefaultRelayChannel = RelayChannels.All[relayIdx].Command; HuntAlerts.C.Save(); }
+        if (Svc.PlayerState.IsLoaded)
+        {
+            var playerConfig = HuntAlerts.C.PlayerConfig;
+            
 
-        var relayFlag = HuntAlerts.C.RelayFlagLink;
-        if (ImGui.Checkbox("Add clickable map flag when relaying", ref relayFlag))
-        { HuntAlerts.C.RelayFlagLink = relayFlag; HuntAlerts.C.Save(); }
+            var selectedChannels = RelayChannels.All
+                .Where(c => playerConfig.AllRelayChannels.Contains(c.Command))
+                .Select(c => c.Display)
+                .ToArray();
+
+            var channelLabel = selectedChannels.Length > 0
+                ? string.Join(", ", selectedChannels)
+                : "None";
+
+            var who = string.IsNullOrEmpty(playerConfig.HomeWorld)
+                ? playerConfig.PlayerName
+                : $"{playerConfig.PlayerName}@{playerConfig.HomeWorld}";
+            if (ImGui.Button($"{who}'s Relay Channels: {channelLabel}"))
+                ImGui.OpenPopup("RelayChannelsPopup");
+
+            if (ImGui.BeginPopup("RelayChannelsPopup"))
+            {
+                foreach (var channel in RelayChannels.All)
+                {
+                    var display = channel.Display;
+                    var selected = playerConfig.AllRelayChannels.Contains(channel.Command);
+                    if (channel.Command[^2] == 'l' && char.IsDigit(channel.Command[^1]))
+                    {
+                        display += " ";
+                        if (channel.Display.StartsWith("Linkshell")) display += Utilities.GetLinkshellName(uint.Parse(channel.Display[^1].ToString()) - 1);
+                        else display += Utilities.GetCrossLinkshellName(uint.Parse(channel.Display[^1].ToString()) - 1);
+                    }
+
+                    if (ImGui.Checkbox($"{display}  {channel.Command}", ref selected))
+                    {
+                        if (channel.Command.Contains("cwls"))
+                        {
+                            if (selected)
+                                playerConfig.RegionCWLSChannels.Add(channel.Command);
+                            else
+                                playerConfig.RegionCWLSChannels.Remove(channel.Command);
+                        } else
+                        {
+                            if (selected)
+                                playerConfig.RelayChannels.Add(channel.Command);
+                            else
+                                playerConfig.RelayChannels.Remove(channel.Command);
+                        }
+                        
+                        
+
+                        HuntAlerts.C.Save();
+                    }
+                }
+
+                ImGui.EndPopup();
+            }
+            var regionlock = playerConfig.RegionLock;
+            if (ImGui.Checkbox("Restrict Relays hunts of Current Region", ref regionlock))
+            { playerConfig.RegionLock = regionlock; HuntAlerts.C.Save(); }
+        }
+
+        var echoRelay = HuntAlerts.C.EchoTestRelay;
+        if (ImGui.Checkbox("Send all relay to Echo for testing", ref echoRelay))
+        { HuntAlerts.C.EchoTestRelay = echoRelay; HuntAlerts.C.Save(); }
+
+        var flagLink = HuntAlerts.C.RelayFlagLink;
+        if (ImGui.Checkbox("Relay location as a <flag> link", ref flagLink))
+        { HuntAlerts.C.RelayFlagLink = flagLink; HuntAlerts.C.Save(); }
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Appends a <flag> map link so anyone in the channel can click the coordinates,\neven without this plugin. Sets your map flag to the hunt location, which opens the map.");
+            ImGui.SetTooltip("On: relays include the game <flag> link (opens the map briefly to set it), falling back to plaintext coordinates if the map can't be opened.\nOff: relays always use plaintext coordinates.");
 
         var snoozeOpts  = new (string Name, int Value)[] { ("5 min", 5), ("15 min", 15), ("30 min", 30), ("60 min", 60), ("2 hours", 120) };
         var snoozeNames = snoozeOpts.Select(o => o.Name).ToArray();

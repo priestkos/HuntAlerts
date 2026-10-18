@@ -19,5 +19,6 @@ public static class Service
     public static WhatsNewWindow WhatsNewWindow { get; internal set; } = null!;
     public static AlertingNoticeWindow AlertingNoticeWindow { get; internal set; } = null!;
 
+    public static void OpenHuntList() => HuntListWindow.IsOpen = true;
     public static void OpenConfig() => ConfigWindow.IsOpen = true;
 }

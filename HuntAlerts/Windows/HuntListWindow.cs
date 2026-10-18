@@ -3,6 +3,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using ECommons.Logging;
 using HuntAlerts.Helpers;
+using HuntAlerts.Messaging;
 using HuntAlerts.Services;
 using System;
 using System.Collections.Generic;
@@ -163,6 +164,7 @@ public class HuntListWindow : Window
             var accent     = isTrain ? Theme.TrainBorder : Theme.SRankBorder;
             var kindLabel  = NormalizeKindLabel(msg.huntKind);
             var world      = msg.huntWorld ?? "Unknown";
+            var dc         = HuntAlertFilter.DatacenterOf(msg.huntWorld ?? "Unknown");
             var time       = FormatClockTime(msg);
             var age        = FormatRelativeAge(msg);
 
@@ -227,6 +229,8 @@ public class HuntListWindow : Window
 
             ImGui.SetCursorScreenPos(new Vector2(topLeft.X + padX, topLeft.Y + cardHeight - padY - ImGui.GetTextLineHeight() - 2f));
             Components.Badge(world, BadgeStyle.World);
+            ImGui.SameLine();
+            Components.Badge(dc, BadgeStyle.SRank);
             if (msg.instance > 1)
             {
                 ImGui.SameLine();

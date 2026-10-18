@@ -6,9 +6,9 @@ namespace HuntAlerts.Helpers;
 public class HuntTrainMessage(string message, string huntType, string huntKind, string huntWorld,
     string currentworldName, string currentregionName, string huntregionName, string posted_Time,
     long postedEpoch, string startLocation, uint startLocationAetheryteId, string startZone, int instance,
-    string locationCoords, bool openmaponArrival, bool lifestreamEnabled, string creatureName = "",
+    bool openmaponArrival, bool lifestreamEnabled, string creatureName = "",
     uint currentRegionRowId = 0, uint huntRegionRowId = 0,
-    uint startTerritoryTypeId = 0, float mapLocationX = 0f, float mapLocationY = 0f)
+    uint startTerritoryTypeId = 0, Vector2 mapLocation = new())
 {
     public string Message = message;
     public string huntType = huntType;
@@ -23,15 +23,16 @@ public class HuntTrainMessage(string message, string huntType, string huntKind, 
     public uint startLocationAetheryteId = startLocationAetheryteId;
     public string startZone = startZone;
     public int instance = instance;
-    public string locationCoords = locationCoords;
+    public string locationCoords => $"{mapLocationX}, {mapLocationY}";
     public bool openmaponArrival = openmaponArrival;
     public bool lifestreamEnabled = lifestreamEnabled;
     public string creatureName = creatureName ?? "";
     public uint currentRegionRowId = currentRegionRowId;
     public uint huntRegionRowId = huntRegionRowId;
     public uint startTerritoryTypeId = startTerritoryTypeId;
-    public float mapLocationX = mapLocationX;
-    public float mapLocationY = mapLocationY;
+    public Vector2 mapLocation = mapLocation;
+    public float mapLocationX => mapLocation.X;
+    public float mapLocationY => mapLocation.Y;
 }
 
 public record struct HuntAlertMessage(

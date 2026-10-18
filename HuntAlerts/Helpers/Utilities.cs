@@ -1,3 +1,5 @@
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Plugin.Services;
 using ECommons;
 using ECommons.Automation;
 using ECommons.DalamudServices;
@@ -5,14 +7,14 @@ using ECommons.ExcelServices;
 using ECommons.IPC;
 using ECommons.Logging;
 using ECommons.Throttlers;
+using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using HuntAlerts.Services;
 using Lumina.Excel.Sheets;
 using System;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Plugin.Services;
 
 namespace HuntAlerts.Helpers
 {
@@ -86,6 +88,8 @@ namespace HuntAlerts.Helpers
                 : !string.IsNullOrEmpty(entry.startZone) ? entry.startZone : entry.huntWorld;
             return $"Navigation set. The arrow appears once you are on {where}.";
         }
+
+        public static void FlagOnMap(Vector2 location, uint territory) => MapManager.OpenMapWithMarker(territory, location.X, location.Y);
 
         public static void FlagOnMap(string locationCoords, string startZone)
         {
@@ -274,6 +278,17 @@ namespace HuntAlerts.Helpers
             {
                 Interlocked.Exchange(ref IsTaskRunning, 0);
             }
+        }
+        public unsafe static string? GetLinkshellName(uint idx)
+        {
+            var utf = InfoProxyChat.Instance()->GetLinkShellName(idx);
+            return utf.HasValue ? utf.ToString() : null;
+        }
+
+        public unsafe static string? GetCrossLinkshellName(uint idx)
+        {
+            var utf = InfoProxyCrossWorldLinkshell.Instance()->GetCrossworldLinkshellName(idx);
+            return utf != null ? utf->ToString() : null;
         }
     }
 }

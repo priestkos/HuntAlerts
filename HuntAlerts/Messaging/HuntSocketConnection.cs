@@ -188,7 +188,10 @@ public sealed class HuntSocketConnection : IDisposable
                 try
                 {
                     if (huntMessage.Type == "new_hunt")
+                    {
+                        huntMessage.LocationCoords = "";
                         HandleTrainEvent(huntMessage);
+                    }
                     else if (huntMessage.Type == "srank")
                         HandleSRankEvent(huntMessage);
                 }
@@ -296,76 +299,29 @@ public sealed class HuntSocketConnection : IDisposable
         var aetheryteName = HuntMessageParsing.StripLocalized(hm.AetheryteName);
         uint aetheryteId = 0;
         uint startTerritoryTypeId = 0;
-        string coordsStr = "";
-        Vector2? mapLocationCoords = null;
+        Vector2 mapLocationCoords = new();
         var startZone = HuntMessageParsing.StripLocalized(hm.LocationName ?? "");
 
-        try
+        if (!string.IsNullOrEmpty(aetheryteName) && aetheryteName != "invalid")
         {
-            var (cx, cy) = HuntMessageParsing.ExtractCoordinates(content);
-            if (cx is not null && cy is not null)
+            var anywhere = MapManager.LookupAetheryteByNameExcel(aetheryteName);
+            if (anywhere is not null)
             {
-                coordsStr = $"{(float)cx}, {(float)cy}";
-                mapLocationCoords = new Vector2((float)cx, (float)cy);
-            }
+                aetheryteId = anywhere.Value.RowId;
+                aetheryteName = anywhere.Value.PlaceName.Value.Name.ExtractText();
+                startZone = anywhere.Value.Territory.Value.PlaceName.Value.Name.ExtractText();
+                startTerritoryTypeId = anywhere.Value.Territory.RowId;
+                var (id, x, y) = MapManager.GetAetheryteTerritoryCoords(aetheryteId);
+                if (id != 0 && x != 0 && y != 0)
+                {
+                    x += Random.Shared.NextSingle() * (0.1f - -0.1f) + -0.1f;
+                    y += Random.Shared.NextSingle() * (0.1f - -0.1f) + -0.1f;
+                    mapLocationCoords = new Vector2((float)x, (float)y);
 
-            PluginLog.Information($"[Resolve] train raw aetheryte='{hm.AetheryteName}' zone='{hm.LocationName}' -> stripped aetheryte='{aetheryteName}' zone='{startZone}'");
-
-            if (TryGetOpenWorldTerritory(hm.LocationName, out var tt))
-            {
-                startTerritoryTypeId = tt;
-                PluginLog.Information($"[Resolve] zone '{hm.LocationName}' -> territory {tt}.");
-                if (aetheryteName == "invalid" || string.IsNullOrEmpty(aetheryteName))
-                {
-                    var (id, name) = (cx, cy) is (float ccx, float ccy)
-                        ? MapManager.GetNearestAetheryte(tt, ccx, ccy)
-                        : MapManager.GetZonePrimaryAetheryte(tt);
-                    aetheryteId = id;
-                    aetheryteName = name;
-                }
-                else
-                {
-                    var match = MapManager.LookupAetheryteByName(tt, aetheryteName);
-                    if (match is not null)
-                    {
-                        aetheryteId = match.Value.RowId;
-                        PluginLog.Information($"[Resolve] matched aetheryte '{aetheryteName}' in territory {tt} -> id {aetheryteId}.");
-                    }
-                    else if (MapManager.LookupAetheryteByNameAnywhere(aetheryteName) is { } global)
-                    {
-                        aetheryteId = global.RowId;
-                        aetheryteName = global.Name;
-                        if (!string.IsNullOrEmpty(global.ZoneName)) startZone = global.ZoneName;
-                        PluginLog.Information($"[Resolve] aetheryte '{aetheryteName}' not in territory {tt} but matched globally -> id {aetheryteId}.");
-                    }
-                    else
-                    {
-                        var (id, name) = (cx, cy) is (float ccx, float ccy)
-                            ? MapManager.GetNearestAetheryte(tt, ccx, ccy)
-                            : MapManager.GetZonePrimaryAetheryte(tt);
-                        PluginLog.Information($"[Resolve] aetheryte '{aetheryteName}' NOT found anywhere; fell back to '{name}' (id {id}).");
-                        aetheryteId = id;
-                        aetheryteName = name;
-                    }
-                }
-            }
-            else if (!string.IsNullOrEmpty(aetheryteName) && aetheryteName != "invalid")
-            {
-                var anywhere = MapManager.LookupAetheryteByNameAnywhere(aetheryteName);
-                if (anywhere is not null)
-                {
-                    PluginLog.Verbose($"Zone '{hm.LocationName}' unrecognized; resolved aetheryte '{aetheryteName}' via global lookup (id {anywhere.Value.RowId}); deduced zone '{anywhere.Value.ZoneName}'.");
-                    aetheryteId = anywhere.Value.RowId;
-                    aetheryteName = anywhere.Value.Name;
-                    if (!string.IsNullOrEmpty(anywhere.Value.ZoneName))
-                        startZone = anywhere.Value.ZoneName;
                 }
             }
         }
-        catch (Exception ex)
-        {
-            PluginLog.Warning($"Coord / aetheryte resolution failed: {ex.Message}");
-        }
+
 
         if (string.IsNullOrEmpty(aetheryteName) || aetheryteName == "invalid") aetheryteName = "Unknown";
 
@@ -389,10 +345,10 @@ public sealed class HuntSocketConnection : IDisposable
             formattedDetail, hm.Type, hm.Kind, hm.World,
             playerCtx.CurrentWorldName, currentRegion, huntRegion,
             postedLocal, hm.Posted_Epoch, aetheryteName, aetheryteId, startZone, instance: 1,
-            coordsStr, openMapOnArrival, lifestreamHooked,
+            openMapOnArrival, lifestreamHooked,
             currentRegionRowId: currentRegionRowId, huntRegionRowId: huntRegionRowId,
             startTerritoryTypeId: startTerritoryTypeId,
-            mapLocationX: mapLocationCoords?.X ?? 0f, mapLocationY: mapLocationCoords?.Y ?? 0f);
+            mapLocation: mapLocationCoords);
         var typedAlert = new HuntAlertMessage(
             formattedDetail,
             hm.Type ?? "",
@@ -422,7 +378,11 @@ public sealed class HuntSocketConnection : IDisposable
         Service.ToastWindow.Show(htMessage);
 
         if (config.ChatAlertsEnabled)
-            PrintChat(BuildLinkedLine(link, $"{hm.Kind} train starting on {hm.World}! (Click for info)", config.TextColor));
+        {
+            var dcName = HuntAlertFilter.DatacenterOf(hm.World);
+            var dcPart = config.ShowDatacenterInNotification && !string.IsNullOrEmpty(dcName) ? $", {dcName}" : "";
+            PrintChat(BuildLinkedLine(link, $"{hm.Kind} train starting on {hm.World}{dcPart}! (Click for info)", config.TextColor));
+        }
 
         if (!Utilities.MuteAlertSoundNow)
         {
@@ -497,7 +457,6 @@ public sealed class HuntSocketConnection : IDisposable
 
         var creatureName = HuntMessageParsing.StripLocalized(hm.CreatureName ?? "");
         var locationName = HuntMessageParsing.StripLocalized(hm.LocationName ?? "");
-        var coordsStr = hm.LocationCoords ?? "";
         var aetheryteName = HuntMessageParsing.StripLocalized(hm.AetheryteName ?? "");
         var instance = hm.Instance < 1 ? 1 : hm.Instance;
         var deathTime = hm.DeathTime;
@@ -510,11 +469,13 @@ public sealed class HuntSocketConnection : IDisposable
 
         uint aetheryteId = 0;
         uint startTerritoryTypeId = 0;
-        Vector2? mapLocationCoords = null;
+        Vector2 mapLocationCoords = new();
         string startLocation = aetheryteName;
-        var (mx, my) = HuntMessageParsing.ExtractCoordinates(coordsStr);
+        var (mx, my) = HuntMessageParsing.ExtractCoordinates(hm.LocationCoords ?? "");
         if (mx is not null && my is not null)
-            mapLocationCoords = new Vector2((float)mx, (float)my);
+            mapLocationCoords.X = mx ?? 0;
+            mapLocationCoords.Y = my ?? 0;
+
         if (deathTime == 0)
         {
             if (TryGetOpenWorldTerritory(locationName, out var tt))
@@ -570,7 +531,7 @@ public sealed class HuntSocketConnection : IDisposable
                 $"World: {hm.World}{Environment.NewLine}Start Zone: {locationName}{Environment.NewLine}" +
                 $"Instance: {instance}{Environment.NewLine}Aetheryte: {startLocation}{Environment.NewLine}" +
                 $"Posted: {postedLocal}{Environment.NewLine}Creature: {creatureName}{Environment.NewLine}{Environment.NewLine}" +
-                $"Location: {locationName} ({coordsStr}){Environment.NewLine}Aetheryte: {aetheryteName}";
+                $"Location: {locationName} ({mapLocationCoords.X}, {mapLocationCoords.Y}){Environment.NewLine}Aetheryte: {aetheryteName}";
 
             var huntWorldId = TryGetWorld(hm.World, out var huntWorld) ? huntWorld.RowId : 0u;
             var huntRegionRowId = huntWorld.DataCenter.ValueNullable?.Region.RowId ?? 0u;
@@ -580,10 +541,10 @@ public sealed class HuntSocketConnection : IDisposable
                 detail, hm.Type, hm.Kind, hm.World,
                 playerCtx.CurrentWorldName ?? "", currentRegion, huntRegion,
                 postedLocal, hm.Posted_Epoch, startLocation, aetheryteId, locationName, instance,
-                coordsStr, openMapOnArrival, lifestreamHooked, creatureName,
+                openMapOnArrival, lifestreamHooked, creatureName,
                 currentRegionRowId: currentRegionRowId, huntRegionRowId: huntRegionRowId,
                 startTerritoryTypeId: startTerritoryTypeId,
-                mapLocationX: mapLocationCoords?.X ?? 0f, mapLocationY: mapLocationCoords?.Y ?? 0f);
+                mapLocation: mapLocationCoords);
 
             var typedAlert = new HuntAlertMessage(
                 detail,
@@ -615,9 +576,11 @@ public sealed class HuntSocketConnection : IDisposable
 
             Service.ToastWindow.Show(htMessage);
 
+            var dcName = HuntAlertFilter.DatacenterOf(hm.World);
+            var dcPart = config.ShowDatacenterInNotification && !string.IsNullOrEmpty(dcName) ? $", {dcName}" : "";
             var label = instance > 1
-                ? $"{hm.Kind} S Rank {creatureName} (i{instance}) spawned on {hm.World}! (Click for info)"
-                : $"{hm.Kind} S Rank {creatureName} spawned on {hm.World}! (Click for info)";
+                ? $"{hm.Kind} S Rank {creatureName} (i{instance}) spawned on {hm.World}{dcPart}! (Click for info)"
+                : $"{hm.Kind} S Rank {creatureName} spawned on {hm.World}{dcPart}! (Click for info)";
 
             if (config.ChatAlertsEnabled)
                 PrintChat(BuildLinkedLine(link, label, config.SRankTextColor));
@@ -673,7 +636,6 @@ public sealed class HuntSocketConnection : IDisposable
         if (cw == null || hw == null || cdc == null || cr == null)
             return new PlayerContextSnapshot(null, null);
 
-        PluginLog.Verbose($"Player ctx: world={cw.Value.Name} home={hw.Value.Name} dc={cdc.Value.Name} region={cr.Value.Name}");
         return new PlayerContextSnapshot(cw, hw);
     }
 
@@ -691,6 +653,16 @@ public sealed class HuntSocketConnection : IDisposable
             return false;
         territoryType = match.RowId;
         return true;
+    }
+
+    public static TerritoryType? GetOpenWorldTerritory(string? zoneName)
+    {
+        if (string.IsNullOrEmpty(zoneName)) return null;
+        if (!Svc.Data.GetExcelSheet<TerritoryType>(Dalamud.Game.ClientLanguage.English).TryGetFirst(
+                t => t.TerritoryIntendedUse.RowId == (uint)TerritoryIntendedUseEnum.Open_World
+                  && (t.PlaceName.ValueNullable?.Name.ExtractText() ?? "").EqualsIgnoreCase(zoneName),
+                out var match)) return match;
+        return null;
     }
 
     private static bool TryGetWorld(string worldName, out World world)

@@ -51,6 +51,7 @@ namespace HuntAlerts
             });
 
             Svc.PluginInterface.UiBuilder.Draw += DrawUI;
+            Svc.PluginInterface.UiBuilder.OpenMainUi += Service.OpenHuntList;
             Svc.PluginInterface.UiBuilder.OpenConfigUi += Service.OpenConfig;
 
             SingletonServiceManager.Initialize(typeof(Service));

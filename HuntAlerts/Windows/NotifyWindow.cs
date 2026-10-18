@@ -2,11 +2,15 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
+using ECommons.Automation.NeoTaskManager;
 using ECommons.DalamudServices;
 using ECommons.Logging;
+using ECommons.Throttlers;
 using HuntAlerts.Helpers;
+using HuntAlerts.Messaging;
 using HuntAlerts.Services;
 using System;
+using System.Linq;
 using System.Numerics;
 
 namespace HuntAlerts.Windows;
@@ -99,7 +103,7 @@ public class NotifyWindow : Window
             {
                 ImGui.PushStyleColor(ImGuiCol.Text, Theme.Text);
                 ImGui.PushTextWrapPos();
-                ImGui.TextUnformatted(entry.Message);
+                ImGui.TextUnformatted(HuntMessageFormatting.ReplaceTimestampsWithRelativeTime(entry.Message));
                 ImGui.PopTextWrapPos();
                 ImGui.PopStyleColor();
             }
@@ -144,9 +148,9 @@ public class NotifyWindow : Window
         if (!string.IsNullOrEmpty(entry.creatureName))
             Components.FieldRow("Creature",  entry.creatureName);
         if (!string.IsNullOrEmpty(entry.startZone))
-            Components.FieldRow("Zone",      entry.startZone);
-        if (!string.IsNullOrEmpty(entry.locationCoords))
-            Components.FieldRow("Coords",    entry.locationCoords);
+            Components.FieldRow("Zone", entry.startZone);
+        if (entry.mapLocation == Vector2.Zero)
+            Components.FieldRow("Coords", entry.locationCoords);
         if (!string.IsNullOrEmpty(entry.startLocation))
             Components.FieldRow("Aetheryte", entry.startLocation);
         if (!string.IsNullOrEmpty(entry.Posted_Time))
@@ -163,7 +167,23 @@ public class NotifyWindow : Window
     private string navMsg = "";
     private long   navMsgAtMs = -1;
 
-    private void DrawActions(HuntTrainMessage entry)
+    private bool SetRelayFlag(HuntTrainMessage entry)
+    {
+        if (entry.startTerritoryTypeId != 0 && !(entry.mapLocation == Vector2.Zero))
+        {
+            var mapopen = MapManager.MapIsOpen();
+            if (!Svc.Framework.RunOnFrameworkThread(() => MapManager.OpenMapWithMarker(entry.startTerritoryTypeId, entry.mapLocationX, entry.mapLocationY)).Result) return false;
+            if (!mapopen)
+            {
+                EzThrottler.Throttle("relaythrottle", 200);
+                MapManager.CloseMap();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private unsafe void DrawActions(HuntTrainMessage entry)
     {
         var currentRegionRowId = Svc.Objects.LocalPlayer?.CurrentWorld.ValueNullable?.DataCenter.ValueNullable?.Region.RowId ?? 0u;
         var canTeleport =
@@ -188,64 +208,104 @@ public class NotifyWindow : Window
             first = false;
         }
 
-        if (!string.IsNullOrEmpty(entry.locationCoords))
+        if (entry.mapLocation != Vector2.Zero)
         {
             if (!first) ImGui.SameLine();
             if (Components.ActionButton(FontAwesomeIcon.MapMarkerAlt, "Flag on Map", ButtonRole.Warn))
-                Utilities.FlagOnMap(entry.locationCoords, entry.startZone);
+            {
+                Utilities.FlagOnMap(entry.mapLocation, entry.startTerritoryTypeId);
+            }
+
+
             first = false;
         }
 
-        if (!first) ImGui.SameLine();
-        if (Components.ActionButton(FontAwesomeIcon.Users, "Party Finder", ButtonRole.Info))
-            Utilities.OpenPartyFinder();
-
-        if (entry.startTerritoryTypeId != 0 && !(entry.mapLocationX == 0f && entry.mapLocationY == 0f))
+        if ((Svc.PlayerState?.IsLoaded ?? false) && Svc.PlayerState?.CurrentWorld.Value.Name.ToString() == entry.huntWorld)
         {
-            ImGui.SameLine();
-            if (Components.ActionButton(FontAwesomeIcon.LocationArrow, "Nav", ButtonRole.Accent))
+            if (!first) ImGui.SameLine();
+            if (Components.ActionButton(FontAwesomeIcon.Users, "Party Finder", ButtonRole.Info))
+                Utilities.OpenPartyFinder();
+
+            if (entry.startTerritoryTypeId != 0 && entry.mapLocation != Vector2.Zero)
             {
-                navMsg     = Utilities.SetNavigation(entry);
-                navMsgAtMs = Environment.TickCount64;
+                ImGui.SameLine();
+                if (Components.ActionButton(FontAwesomeIcon.LocationArrow, "Nav", ButtonRole.Accent))
+                {
+                    navMsg = Utilities.SetNavigation(entry);
+                    navMsgAtMs = Environment.TickCount64;
+                }
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Point the navigation arrow at these coordinates");
             }
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Point the navigation arrow at these coordinates");
         }
 
-        ImGui.SameLine();
-        var defaultChannel = string.IsNullOrEmpty(HuntAlerts.C.DefaultRelayChannel)
-            ? "/p"
-            : HuntAlerts.C.DefaultRelayChannel;
-        var defaultDisplay = RelayChannels.DisplayFor(defaultChannel);
-        if (Components.ActionButton(FontAwesomeIcon.Bullhorn, "Relay", ButtonRole.Success))
-            RelayChannels.RelayMessage(entry, defaultChannel);
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip($"Relay to {defaultDisplay}");
 
-        ImGui.SameLine(0, 2);
-        ImGui.PushStyleColor(ImGuiCol.Button,        Theme.SuccessBtn);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Theme.SuccessBtnHover);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive,  Theme.SuccessBtnActive);
-        if (ImGuiComponents.IconButton("##relayChevron", FontAwesomeIcon.ChevronUp))
-            ImGui.OpenPopup("##relayPicker");
-        ImGui.PopStyleColor(3);
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Pick a one-off relay channel");
 
-        if (ImGui.BeginPopup("##relayPicker"))
+        if (Svc.PlayerState.IsLoaded && entry.mapLocation != Vector2.Zero)
         {
-            ImGui.PushStyleColor(ImGuiCol.Text, Theme.Subtle);
-            ImGui.TextUnformatted($"Default: {defaultDisplay}");
-            ImGui.PopStyleColor();
-            ImGui.Separator();
-            foreach (var ch in RelayChannels.All)
+
+            var playerConfig = HuntAlerts.C.PlayerConfig;
+            if ((playerConfig.RegionLock && currentRegionRowId == entry.huntRegionRowId) || !playerConfig.RegionLock)
             {
-                if (ImGui.MenuItem($"{ch.Display}  {ch.Command}"))
+                var selectedChannels = RelayChannels.All
+                .Where(c => playerConfig.AllRelayChannels.Contains(c.Command));
+
+                var channelLabel = selectedChannels.ToArray().Length > 0
+                    ? string.Join(", ", selectedChannels.Select(c => c.Display))
+                    : "None";
+
+                ImGui.SameLine();
+                if (Components.ActionButton(FontAwesomeIcon.Bullhorn, "Relay", !HuntAlerts.C.EchoTestRelay ? ButtonRole.Success : ButtonRole.Warn))
                 {
-                    RelayChannels.RelayMessage(entry, ch.Command);
+                    var useFlag = HuntAlerts.C.RelayFlagLink && SetRelayFlag(entry);
+                    var tm = new TaskManager();
+                    foreach (var channel in selectedChannels)
+                    {
+                        if (channel.Display.StartsWith("Linkshell") && Svc.PlayerState.HomeWorld.RowId != Svc.PlayerState.CurrentWorld.RowId) continue;
+                        tm.Enqueue(() => RelayChannels.RelayMessage(entry, channel.Command, useFlag));
+                        tm.EnqueueDelay(1000 / 60);
+                    }
+
+                }
+
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip($"{(HuntAlerts.C.EchoTestRelay ? " [DEBUG ]echo " : "")}Relay to {channelLabel}");
+
+                ImGui.SameLine(0, 2);
+
+                ImGui.PushStyleColor(ImGuiCol.Button, Theme.SuccessBtn);
+                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Theme.SuccessBtnHover);
+                ImGui.PushStyleColor(ImGuiCol.ButtonActive, Theme.SuccessBtnActive);
+                if (ImGuiComponents.IconButton("##relayChevron", FontAwesomeIcon.ChevronUp))
+                    ImGui.OpenPopup("##relayPicker");
+                ImGui.PopStyleColor(3);
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Pick a one-off relay channel");
+
+                if (ImGui.BeginPopup("##relayPicker"))
+                {
+
+                    foreach (var ch in RelayChannels.All)
+                    {
+                        var display = ch.Display;
+                        var selected = playerConfig.AllRelayChannels.Contains(ch.Command);
+                        if (ch.Command[^2] == 'l' && char.IsDigit(ch.Command[^1]))
+                        {
+                            display += " ";
+                            if (ch.Display.StartsWith("Linkshell")) display += Utilities.GetLinkshellName(uint.Parse(ch.Display[^1].ToString()) - 1);
+                            else display += Utilities.GetCrossLinkshellName(uint.Parse(ch.Display[^1].ToString()) - 1);
+                        }
+                        if (ImGui.MenuItem($"{display}  {ch.Command}"))
+                        {
+                            var useFlag = HuntAlerts.C.RelayFlagLink && SetRelayFlag(entry);
+                            RelayChannels.RelayMessage(entry, ch.Command, useFlag);
+                        }
+                    }
+                    ImGui.EndPopup();
                 }
             }
-            ImGui.EndPopup();
+
+
         }
 
         if (navMsgAtMs >= 0 && Environment.TickCount64 - navMsgAtMs < 6000 && !string.IsNullOrEmpty(navMsg))
