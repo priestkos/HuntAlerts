@@ -208,7 +208,7 @@ public class NotifyWindow : Window
             first = false;
         }
 
-        if (entry.mapLocation != Vector2.Zero)
+        if (entry.startTerritoryTypeId != 0 && entry.mapLocation != Vector2.Zero)
         {
             if (!first) ImGui.SameLine();
             if (Components.ActionButton(FontAwesomeIcon.MapMarkerAlt, "Flag on Map", ButtonRole.Warn))

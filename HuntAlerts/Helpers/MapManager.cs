@@ -12,8 +12,9 @@ public static class MapManager
 {
     public static bool OpenMapWithMarker(uint territoryType, float x, float y)
     {
-        var map = Svc.Data.GetExcelSheet<TerritoryType>().GetRow(territoryType).Map.RowId;
-        var linkPayload = new MapLinkPayload(territoryType, map, x, y);
+        if (territoryType == 0) return false;
+        if (Svc.Data.GetExcelSheet<TerritoryType>().GetRowOrDefault(territoryType) is not { } territory) return false;
+        var linkPayload = new MapLinkPayload(territoryType, territory.Map.RowId, x, y);
         return Svc.GameGui.OpenMapWithMapLink(linkPayload);
     }
 

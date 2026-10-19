@@ -199,14 +199,17 @@ public class ToastWindow : Window
         ImGui.SameLine();
         Text($"{kind} {(isTrain ? "train" : "S Rank")}", Theme.Text);
 
-        if (!string.IsNullOrEmpty(world) && !string.IsNullOrEmpty(dc))
+        if (!string.IsNullOrEmpty(world))
         {
             ImGui.SameLine();
             Text("·", Theme.Subtle);
             ImGui.SameLine();
             Badge(world, BadgeStyle.World);
-            ImGui.SameLine();
-            Badge(dc, BadgeStyle.SRank);
+            if (!string.IsNullOrEmpty(dc))
+            {
+                ImGui.SameLine();
+                Badge(dc, BadgeStyle.SRank);
+            }
         }
 
         if (!string.IsNullOrEmpty(time))
