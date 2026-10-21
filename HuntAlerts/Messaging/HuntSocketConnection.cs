@@ -646,13 +646,17 @@ public sealed class HuntSocketConnection : IDisposable
     {
         territoryType = 0;
         if (string.IsNullOrEmpty(zoneName)) return false;
-        if (!Svc.Data.GetExcelSheet<TerritoryType>(Dalamud.Game.ClientLanguage.English).TryGetFirst(
+        var placeNameId = MapManager.ResolvePlaceNameId(zoneName);
+        if (placeNameId != 0 && Svc.Data.GetExcelSheet<TerritoryType>().TryGetFirst(
                 t => t.TerritoryIntendedUse.RowId == (uint)TerritoryIntendedUseEnum.Open_World
-                  && (t.PlaceName.ValueNullable?.Name.ExtractText() ?? "").EqualsIgnoreCase(zoneName),
+                  && t.PlaceName.RowId == placeNameId,
                 out var match))
-            return false;
-        territoryType = match.RowId;
-        return true;
+        {
+            territoryType = match.RowId;
+            return true;
+        }
+        PluginLog.Verbose($"TryGetOpenWorldTerritory: no open-world territory matched '{zoneName}' (placeNameId={placeNameId})");
+        return false;
     }
 
     public static TerritoryType? GetOpenWorldTerritory(string? zoneName)

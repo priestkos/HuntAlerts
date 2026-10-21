@@ -102,7 +102,8 @@ namespace HuntAlerts.Helpers
                 var (x, y) = Messaging.HuntMessageParsing.ExtractCoordinates(locationCoords);
                 if (x is null || y is null) return;
 
-                if (Svc.Data.GetExcelSheet<TerritoryType>(Dalamud.Game.ClientLanguage.English).TryGetFirst(x => x.TerritoryIntendedUse.RowId == (uint)TerritoryIntendedUseEnum.Open_World && (x.PlaceName.ValueNullable?.Name.ExtractText() ?? "").EqualsIgnoreCase(startZone), out var value))
+                var placeNameId = MapManager.ResolvePlaceNameId(startZone);
+                if (placeNameId != 0 && Svc.Data.GetExcelSheet<TerritoryType>().TryGetFirst(z => z.TerritoryIntendedUse.RowId == (uint)TerritoryIntendedUseEnum.Open_World && z.PlaceName.RowId == placeNameId, out var value))
                 {
                     tt = value.RowId; //is territory id
                     MapManager.OpenMapWithMarker(tt, (float)x, (float)y);

@@ -105,62 +105,45 @@ public static class MapManager
         return GetNearestAetheryte(territoryType, 21f, 21f);
     }
 
+    public static uint ResolvePlaceNameId(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return 0;
+        foreach (var lang in GameLanguages.All)
+            if (Svc.Data.GetExcelSheet<PlaceName>(lang).TryGetFirst(
+                    p => (p.Name.ExtractText() ?? "").EqualsIgnoreCase(name), out var pn))
+                return pn.RowId;
+        return 0;
+    }
+
     public static (uint RowId, string Name)? LookupAetheryteByName(uint territoryType, string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) return null;
-        foreach (var data in Svc.Data.GetExcelSheet<Aetheryte>(Dalamud.Game.ClientLanguage.English))
-        {
-            if (!data.IsAetheryte) continue;
-            if (data.Territory.ValueNullable == null) continue;
-            if (data.PlaceName.ValueNullable == null) continue;
-            if (data.Territory.Value.RowId != territoryType) continue;
-            var n = data.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
-            if (n.EqualsIgnoreCase(name))
-            {
-                return (data.RowId, n);
-            }
-        }
+        var placeNameId = ResolvePlaceNameId(name);
+        if (placeNameId == 0) return null;
+        if (Svc.Data.GetExcelSheet<Aetheryte>().TryGetFirst(
+                a => a.IsAetheryte && a.Territory.RowId == territoryType && a.PlaceName.RowId == placeNameId, out var data))
+            return (data.RowId, data.PlaceName.ValueNullable?.Name.ExtractText() ?? name);
         return null;
     }
 
     public static (uint RowId, string Name, string ZoneName)? LookupAetheryteByNameAnywhere(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) return null;
-        foreach (var data in Svc.Data.GetExcelSheet<Aetheryte>(Dalamud.Game.ClientLanguage.English))
+        var placeNameId = ResolvePlaceNameId(name);
+        if (placeNameId == 0) return null;
+        if (Svc.Data.GetExcelSheet<Aetheryte>().TryGetFirst(a => a.IsAetheryte && a.PlaceName.RowId == placeNameId, out var data))
         {
-            if (!data.IsAetheryte) continue;
-            if (data.PlaceName.ValueNullable == null) continue;
-            var n = data.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
-            if (n.EqualsIgnoreCase(name))
-            {
-                var zoneName = data.Territory.ValueNullable?.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
-                return (data.RowId, n, zoneName);
-            }
+            var n = data.PlaceName.ValueNullable?.Name.ExtractText() ?? name;
+            var zoneName = data.Territory.ValueNullable?.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
+            return (data.RowId, n, zoneName);
         }
         return null;
     }
 
     public static Aetheryte? LookupAetheryteByNameExcel(string name)
     {
-        if(string.IsNullOrWhiteSpace(name)) return null;
-
-        if (Svc.Data.GetExcelSheet<Aetheryte>(Dalamud.Game.ClientLanguage.English).TryGetFirst(a => a.PlaceName.Value.Name.ExtractText() == name, out var aetheryte))
-        {
+        var placeNameId = ResolvePlaceNameId(name);
+        if (placeNameId == 0) return null;
+        if (Svc.Data.GetExcelSheet<Aetheryte>().TryGetFirst(a => a.IsAetheryte && a.PlaceName.RowId == placeNameId, out var aetheryte))
             return aetheryte;
-        }
-        return null;
-
-
-        foreach (var data in Svc.Data.GetExcelSheet<Aetheryte>(Dalamud.Game.ClientLanguage.English))
-        {
-            if (!data.IsAetheryte) continue;
-            if (data.PlaceName.ValueNullable == null) continue;
-            var n = data.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
-            if (n.EqualsIgnoreCase(name))
-            {
-                var zoneName = data.Territory.ValueNullable?.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
-            }
-        }
         return null;
     }
 

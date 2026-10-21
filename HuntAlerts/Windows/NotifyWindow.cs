@@ -241,7 +241,7 @@ public class NotifyWindow : Window
 
 
 
-        if (Svc.PlayerState.IsLoaded && entry.mapLocation != Vector2.Zero)
+        if (Svc.PlayerState.IsLoaded)
         {
 
             var playerConfig = HuntAlerts.C.PlayerConfig;
