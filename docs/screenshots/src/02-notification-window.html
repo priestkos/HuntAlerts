@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="imgui-common.css" />
+  <title>02 Notification</title>
+  <style>
+    .w-notify { width: 540px; }
+    .hero { font-size: 15px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="frame-root">
+    <div class="imgui-window w-notify">
+      <div class="imgui-titlebar">
+        <span>HuntAlerts Notification</span>
+        <span class="titlebar-btns">⚙ 🔔 ⟲ ✕</span>
+      </div>
+      <div class="imgui-body">
+        <div class="hero">
+          <span class="badge badge-train">TRAIN</span> Dawntrail train
+        </div>
+        <div style="margin-bottom:12px">
+          <span class="badge badge-kind">DT</span>
+          <span class="badge badge-world">Example World</span>
+          <span class="badge badge-kind">i2</span>
+        </div>
+        <div style="min-height:120px;line-height:1.45">
+          DT train starting at Yak T'el (23.10, 23.50) in ~8 minutes — Example relay feed text with relative timestamps.
+        </div>
+        <div class="separator"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+          <span class="btn btn-accent">🚀 Teleport</span>
+          <span class="btn btn-warn">📍 Flag on Map</span>
+          <span class="btn btn-info">👥 Party Finder</span>
+          <span class="btn btn-accent">➤ Nav</span>
+          <span class="btn btn-success">📢 Relay</span>
+          <span class="btn btn-success" style="padding:4px 6px">▲</span>
+        </div>
+        <p class="subtle" style="margin-top:10px;font-size:11px">
+          Relay preview: Example World TRAIN: Yak T'el (23.10, 23.50) i2
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

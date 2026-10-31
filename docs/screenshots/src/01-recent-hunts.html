@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="imgui-common.css" />
+  <title>01 Recent Hunts</title>
+  <style>
+    .w-main { width: 520px; }
+  </style>
+</head>
+<body>
+  <div class="frame-root">
+    <div class="imgui-window w-main">
+      <div class="imgui-titlebar">
+        <span>HuntAlerts History</span>
+        <span class="titlebar-btns">⚙ 🔔 ✕</span>
+      </div>
+      <div class="imgui-body">
+        <div><span class="accent">⟲</span> <span class="accent">Recent Hunts</span> <span class="subtle">· 4 cached</span>
+          <span class="btn btn-danger" style="margin-left:8px;font-size:11px;padding:2px 8px">🗑 Clear</span>
+        </div>
+        <div class="separator"></div>
+        <div class="card">
+          <span class="badge badge-train">TRAIN</span> Dawntrail
+          <span style="float:right;text-align:right">
+            <div>02:14 PM</div>
+            <div class="subtle" style="font-size:11px">Today</div>
+          </span>
+          <div style="margin-top:18px">
+            <span class="badge badge-world">Example World</span>
+            <span class="badge badge-srank">Aether</span>
+            <span class="badge badge-kind">i2</span>
+            <span class="subtle"> · Yak T'el</span>
+          </div>
+        </div>
+        <div class="card">
+          <span class="badge badge-srank">S RANK</span> Endwalker
+          <span style="float:right">01:52 PM<div class="subtle" style="font-size:11px">Today</div></span>
+          <div style="margin-top:18px">
+            <span class="badge badge-world">Example Character</span>
+            <span class="badge badge-srank">Crystal</span>
+            <span class="subtle"> · Thavnair</span>
+          </div>
+        </div>
+        <div class="card card-srank">
+          <span class="badge badge-train">TRAIN</span> Centurio (ARR / HW / SB)
+          <span style="float:right">11:30 AM<div class="subtle" style="font-size:11px">Today</div></span>
+          <div style="margin-top:18px">
+            <span class="badge badge-world">Placeholder Realm</span>
+            <span class="badge badge-srank">Primal</span>
+            <span class="subtle"> · Coerthas Western Highlands</span>
+          </div>
+        </div>
+        <div class="card">
+          <span class="badge badge-srank">S RANK</span> Shadowbringers
+          <span style="float:right">Yesterday<div class="subtle" style="font-size:11px">1 Day Ago</div></span>
+          <div style="margin-top:18px">
+            <span class="badge badge-world">Demo Server</span>
+            <span class="badge badge-srank">Light</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

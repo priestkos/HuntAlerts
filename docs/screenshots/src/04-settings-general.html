@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="imgui-common.css" />
+  <title>04 Settings General</title>
+  <style>
+    .w-config { width: 620px; }
+    .whatsnew { position:absolute; right:24px; top:24px; width:380px; opacity:.95; }
+  </style>
+</head>
+<body>
+  <div class="frame-root" style="position:relative">
+    <div class="imgui-window w-config">
+      <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
+      <div class="config-layout">
+        <div class="sidebar">
+          <div class="nav-item"><span>🚂</span> Hunt Trains</div>
+          <div class="nav-item"><span>🌐</span> Train Worlds</div>
+          <div class="nav-item"><span>💀</span> S Ranks</div>
+          <div class="nav-item"><span>🗺</span> S Rank Worlds</div>
+          <div class="nav-item selected"><span>⚙</span> General</div>
+          <div class="nav-item"><span>🔌</span> Integrations</div>
+          <div class="nav-item"><span>🖥</span> Connection</div>
+          <div class="separator"></div>
+          <div class="nav-item accent"><span>🎁</span> What's New</div>
+          <div class="nav-item"><span>💬</span> Discord</div>
+        </div>
+        <div class="config-body" style="font-size:12px;max-height:480px;overflow:hidden">
+          <div class="section-header">General Options</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Suppress Duplicate Messages</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Flag Map automatically on arrival</div>
+          <div class="checkbox-row"><input type="checkbox" /> Show data center in notifications</div>
+          <div class="checkbox-row"><input type="checkbox" /> Hide alerts while in a duty</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Mute alert sounds during cutscenes</div>
+          <div class="section-header">Chat</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Show alerts in chat</div>
+          <div class="checkbox-row"><input type="checkbox" /> Use Dalamud Default Chat</div>
+          <div style="margin:4px 0">Chat Channel <span class="combo">Echo</span></div>
+          <div class="section-header">Notifications</div>
+          <div style="margin:4px 0"><span class="btn btn-accent" style="font-size:11px">Example Character@Example World's Relay Channels: Party, Linkshell 1</span></div>
+          <div class="checkbox-row"><input type="checkbox" /> Restrict Relays hunts of Current Region</div>
+          <div class="checkbox-row"><input type="checkbox" /> Send all relay to Echo for testing</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Relay location as a &lt;flag&gt; link</div>
+          <div style="margin:6px 0">Train Relay Message <input class="input" value="{world} TRAIN: {loc}{inst}" /> <span class="btn btn-accent" style="padding:2px 6px;font-size:11px">Reset</span></div>
+          <div style="margin:6px 0">S Rank Relay Message <input class="input" value="S Rank {world}: {loc}{inst}" /> <span class="btn btn-accent" style="padding:2px 6px;font-size:11px">Reset</span></div>
+          <div style="margin:4px 0">Snooze Duration <span class="combo">30 min</span> <span class="btn btn-warn" style="font-size:11px">🌙 Snooze 30m</span></div>
+          <div class="section-header">Toast Banner</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Show a toast banner for new alerts</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Show navigation arrow</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Auto-pick up coordinates from chat flags</div>
+          <div style="margin-left:16px;font-size:11px"><input type="checkbox" checked /> Shout <input type="checkbox" checked /> Yell <input type="checkbox" /> Party</div>
+          <div style="margin:4px 0">Train Sound <span class="combo">Sound 1</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="imgui-window whatsnew">
+      <div class="imgui-titlebar"><span>HuntAlerts - What's New</span></div>
+      <div class="imgui-body" style="font-size:12px">
+        <span class="accent">🎁 What's New in HuntAlerts</span>
+        <div class="separator"></div>
+        <div class="accent">▼ Version 1.4.1.8</div>
+        <p class="subtle" style="margin-top:6px">Features · Bug Fixes (changelog entries)</p>
+        <div class="separator"></div>
+        <span class="btn btn-accent">✓ Got it</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
