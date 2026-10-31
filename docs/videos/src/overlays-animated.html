@@ -22,6 +22,8 @@
       </svg>
     </div>
     <div class="dist-label" id="dist-label">142y</div>
+    <div class="wt-hotspot" id="hotspot-toast" style="position:fixed;left:50%;top:18px;width:120px;height:36px;margin-left:-60px;opacity:0;pointer-events:none" aria-hidden="true"></div>
+    <div class="wt-hotspot" id="hotspot-nav" style="position:fixed;right:18%;top:42%;width:64px;height:64px;opacity:0;pointer-events:none" aria-hidden="true"></div>
     <div class="chat-log" id="chat-log">
       <div class="chat-line chat-train" style="opacity:0" id="chat1">[HuntAlerts] Example World TRAIN: Yak T'el (23.10, 23.50) i2</div>
       <div class="chat-line chat-srank" style="opacity:0" id="chat2">[HuntAlerts] S Rank Example World: Thavnair (18.2, 12.4)</div>
@@ -29,25 +31,30 @@
     </div>
   </div>
   <script>
-    window.walkthrough = {
-      showToast() {
-        document.getElementById('toast').classList.add('visible');
-      },
-      showChatLines() {
-        ['chat1', 'chat2', 'chat3'].forEach((id, i) => {
-          setTimeout(() => {
-            document.getElementById(id).style.opacity = '1';
-            document.getElementById(id).style.transition = 'opacity 0.4s ease';
-          }, i * 350);
-        });
-      },
-      pulseNav() {
-        const el = document.getElementById('nav-arrow');
-        el.style.transform = 'scale(1.08)';
-        el.style.transition = 'transform 0.35s ease';
-        setTimeout(() => { el.style.transform = 'scale(1)'; }, 350);
-      },
-    };
+    function showToast() {
+      document.getElementById('toast').classList.add('visible');
+    }
+    function showChatLines() {
+      ['chat1', 'chat2', 'chat3'].forEach((id, i) => {
+        setTimeout(() => {
+          const line = document.getElementById(id);
+          line.style.opacity = '1';
+          line.style.transition = 'opacity 0.45s ease';
+          line.style.transform = 'translateY(0)';
+        }, i * 380);
+      });
+    }
+    function pulseNav() {
+      const el = document.getElementById('nav-arrow');
+      el.style.transform = 'scale(1.08)';
+      el.style.transition = 'transform 0.35s ease';
+      setTimeout(() => { el.style.transform = 'scale(1)'; }, 350);
+    }
+    ['chat1', 'chat2', 'chat3'].forEach((id) => {
+      const line = document.getElementById(id);
+      line.style.transform = 'translateY(4px)';
+    });
+    window.walkthrough = { showToast, showChatLines, pulseNav };
   </script>
 </body>
 </html>

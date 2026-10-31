@@ -24,6 +24,22 @@ async function injectCaptionStyles(page) {
   await page.addStyleTag({ path: path.join(srcDir, 'walkthrough-overlay.css') });
 }
 
+async function injectRuntime(page) {
+  await page.addScriptTag({ path: path.join(srcDir, 'walkthrough-runtime.js') });
+}
+
+async function setupWalkthrough(page, cursorX = 920, cursorY = 420) {
+  await injectCaptionStyles(page);
+  await injectRuntime(page);
+  await page.evaluate(
+    ([x, y]) => {
+      WT.ensureCursor();
+      WT.initCursorPosition(x, y);
+    },
+    [cursorX, cursorY],
+  );
+}
+
 async function setCaption(page, text) {
   await page.evaluate((caption) => {
     let el = document.getElementById('walkthrough-caption');
@@ -34,6 +50,8 @@ async function setCaption(page, text) {
       document.body.appendChild(el);
     }
     el.textContent = caption;
+    el.style.opacity = '1';
+    el.style.transform = 'translateX(-50%) translateY(0)';
   }, text);
 }
 
@@ -50,11 +68,12 @@ async function setTopDisclaimer(page, text) {
   }, text);
 }
 
-async function clearOverlays(page) {
-  await page.evaluate(() => {
-    document.getElementById('walkthrough-caption')?.remove();
-    document.getElementById('walkthrough-top-banner')?.remove();
-  });
+async function transitionTo(page, relativePath, cursorX = 920, cursorY = 420) {
+  await page.evaluate(() => WT.sceneFadeOut(360));
+  await page.goto(fileUrl(relativePath), { waitUntil: 'load' });
+  await setupWalkthrough(page, cursorX, cursorY);
+  await setTopDisclaimer(page, DISCLAIMER);
+  await page.evaluate(() => WT.sceneFadeIn(360));
 }
 
 const DISCLAIMER = 'UI mock-ups — not in-game captures';
@@ -69,71 +88,95 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 
-// Intro — on-screen disclaimer (required at start)
+// Intro — disclaimer with soft fade-in
 await page.goto(fileUrl('intro.html'), { waitUntil: 'load' });
-await sleep(4000);
+await setupWalkthrough(page, 640, 360);
+await page.evaluate(() => WT.introFadeIn(520));
+await sleep(3200);
 
 // 01 Recent Hunts
-await page.goto(fileUrl('../../screenshots/src/01-recent-hunts.html'), { waitUntil: 'load' });
-await injectCaptionStyles(page);
-await setTopDisclaimer(page, DISCLAIMER);
-await setCaption(page, 'Recent Hunts — /huntalerts history & cached alert cards');
+await transitionTo(page, '../../screenshots/src/01-recent-hunts.html', 780, 320);
 await page.evaluate(() => {
-  document.querySelector('.card')?.classList.add('card-highlight');
+  document.querySelectorAll('.imgui-body .card').forEach((card) => {
+    card.style.cursor = 'default';
+    card.addEventListener('click', (e) => {
+      document.querySelectorAll('.card').forEach((c) => c.classList.remove('card-highlight'));
+      e.currentTarget.classList.add('card-highlight');
+    });
+  });
 });
-await sleep(5500);
+await setCaption(page, 'Recent Hunts — /huntalerts history & cached alert cards');
+await sleep(800);
+await page.evaluate(async () => {
+  await WT.clickElement('.imgui-body .card');
+});
+await sleep(4800);
 
 // 02 Notification
-await page.goto(fileUrl('notification-interactive.html'), { waitUntil: 'load' });
-await injectCaptionStyles(page);
-await setTopDisclaimer(page, DISCLAIMER);
+await transitionTo(page, 'notification-interactive.html', 640, 280);
 await setCaption(page, 'Notification window — Teleport, Flag, Party Finder, Nav, Relay');
-await page.evaluate(() => window.walkthrough.openRelayPicker());
-await sleep(1200);
-await page.evaluate(() => window.walkthrough.highlightRelayPreview());
-await setCaption(page, 'Relay preview & one-off channel picker (mock-up)');
-await sleep(4500);
+await sleep(700);
+await page.evaluate(async () => {
+  await WT.clickElement('#relay-picker');
+});
+await sleep(400);
+await page.evaluate(async () => {
+  await WT.slideCaption('Relay preview & one-off channel picker (mock-up)');
+  await WT.moveCursorToElement('#relay-preview', 500);
+  window.walkthrough.highlightRelayPreview();
+});
+await sleep(4200);
 
 // 03 Overlays
-await page.goto(fileUrl('overlays-animated.html'), { waitUntil: 'load' });
-await injectCaptionStyles(page);
-await setTopDisclaimer(page, DISCLAIMER);
+await transitionTo(page, 'overlays-animated.html', 200, 200);
 await setCaption(page, 'Toast banner, navigation arrow & chat alerts');
-await page.evaluate(() => {
+await sleep(600);
+await page.evaluate(async () => {
+  await WT.clickElement('#hotspot-toast', { moveDuration: 480 });
   window.walkthrough.showToast();
+  await WT.wait(500);
+  await WT.moveCursorToElement('#chat-log', 520);
   window.walkthrough.showChatLines();
+  await WT.wait(900);
+  await WT.clickElement('#hotspot-nav', { moveDuration: 460 });
   window.walkthrough.pulseNav();
 });
-await sleep(6500);
+await sleep(3800);
 
 // 04 Settings
-await page.goto(fileUrl('settings-interactive.html'), { waitUntil: 'load' });
-await injectCaptionStyles(page);
-await setTopDisclaimer(page, DISCLAIMER);
+await transitionTo(page, 'settings-interactive.html', 180, 260);
 await setCaption(page, 'Settings — /huntalerts settings (General tab)');
-await sleep(2000);
-await page.evaluate(() => window.walkthrough.selectPanel('trains'));
-await setCaption(page, 'Hunt train groups & scope filters');
-await sleep(2500);
-await page.evaluate(() => window.walkthrough.selectPanel('general'));
-await page.evaluate(() => window.walkthrough.toggleFlagLink());
-await setCaption(page, 'Relay templates, snooze, toast & arrow options');
-await sleep(4500);
+await sleep(1200);
+await page.evaluate(async () => {
+  await WT.clickElement('[data-panel="trains"]');
+});
+await page.evaluate(() => WT.slideCaption('Hunt train groups & scope filters'));
+await sleep(2200);
+await page.evaluate(async () => {
+  await WT.clickElement('[data-panel="general"]');
+  await WT.wait(350);
+  await WT.clickElement('#flag-link');
+});
+await page.evaluate(() => WT.slideCaption('Relay templates, snooze, toast & arrow options'));
+await sleep(3800);
 
 // 05 Filters / debug
-await page.goto(fileUrl('filters-interactive.html'), { waitUntil: 'load' });
-await injectCaptionStyles(page);
-await setTopDisclaimer(page, DISCLAIMER);
+await transitionTo(page, 'filters-interactive.html', 640, 340);
 await setCaption(page, 'Train worlds, S ranks, connection & integrations');
-await sleep(2500);
-await page.evaluate(() => window.walkthrough.toggleSargatanas());
-await setCaption(page, 'Per-world filters (Train Worlds mock-up)');
-await sleep(2500);
-await page.evaluate(() => window.walkthrough.pressSendTest());
-await setCaption(page, 'Debug simulate hunt · Alerting Restored notice');
-await sleep(4500);
+await sleep(1800);
+await page.evaluate(async () => {
+  await WT.clickElement('#world-sargatanas');
+});
+await page.evaluate(() => WT.slideCaption('Per-world filters (Train Worlds mock-up)'));
+await sleep(2200);
+await page.evaluate(async () => {
+  await WT.clickElement('#send-test');
+});
+await page.evaluate(() => WT.slideCaption('Debug simulate hunt · Alerting Restored notice'));
+await sleep(3800);
 
-// Outro — repeat disclaimer
+// Outro — repeat disclaimer with fade
+await page.evaluate(() => WT.sceneFadeOut(400));
 await page.setContent(`
 <!DOCTYPE html><html><head><style>
 body{margin:0;width:1280px;height:720px;display:flex;align-items:center;justify-content:center;
@@ -144,7 +187,9 @@ strong{color:#ffc68a;font-size:26px;display:block;margin-bottom:12px}
 <p><strong>${DISCLAIMER}</strong>
 HuntAlerts UI mock-up walkthrough — see README for real plugin behaviour.</p>
 </body></html>`);
-await sleep(2500);
+await setupWalkthrough(page, 640, 360);
+await page.evaluate(() => WT.sceneFadeIn(400));
+await sleep(2200);
 
 const video = page.video();
 await page.close();
@@ -155,7 +200,6 @@ const rawPath = await video.path();
 fs.copyFileSync(rawPath, mp4Out);
 fs.rmSync(tmpVideoDir, { recursive: true, force: true });
 
-// Re-encode for H.264 + size cap; fall back to copy if ffmpeg fails
 try {
   execFileSync(
     'ffmpeg',
@@ -167,6 +211,8 @@ try {
       'libx264',
       '-pix_fmt',
       'yuv420p',
+      '-r',
+      '30',
       '-crf',
       '28',
       '-preset',
@@ -182,7 +228,6 @@ try {
   console.warn('ffmpeg H.264 re-encode skipped:', e.message);
 }
 
-// Animated GIF — 800px wide, low fps
 execFileSync(
   'ffmpeg',
   [
@@ -190,7 +235,7 @@ execFileSync(
     '-i',
     mp4Out,
     '-vf',
-    'fps=8,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3',
+    'fps=6,scale=720:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=96[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5',
     '-loop',
     '0',
     gifOut,

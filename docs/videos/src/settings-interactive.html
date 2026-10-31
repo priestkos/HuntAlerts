@@ -97,7 +97,12 @@
     </div>
   </div>
   <script>
-    function selectPanel(panelId) {
+    async function selectPanel(panelId, animate = false) {
+      const body = document.querySelector('.config-body');
+      if (animate && body) {
+        body.classList.add('panel-switching');
+        await new Promise((r) => setTimeout(r, 220));
+      }
       document.querySelectorAll('.nav-item.clickable').forEach((el) => {
         el.classList.toggle('selected', el.dataset.panel === panelId);
       });
@@ -106,9 +111,15 @@
       });
       document.getElementById('whatsnew-window').style.display =
         panelId === 'whatsnew' ? 'none' : '';
+      if (animate && body) {
+        body.classList.remove('panel-switching');
+        body.classList.add('panel-switching-done');
+        await new Promise((r) => setTimeout(r, 320));
+        body.classList.remove('panel-switching-done');
+      }
     }
     document.querySelectorAll('.nav-item.clickable').forEach((el) => {
-      el.addEventListener('click', () => selectPanel(el.dataset.panel));
+      el.addEventListener('click', () => selectPanel(el.dataset.panel, true));
     });
     window.walkthrough = {
       selectPanel,
