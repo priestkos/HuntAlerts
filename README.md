@@ -1,5 +1,7 @@
 # HuntAlerts — private build
 
+<img src="images/icon.png" width="96">
+
 > ## ⚠️ Do not use this repository
 > **This is a private-use fork. It is published only so I can install it on my own machines — do not use it, do not add it
 > as a plugin repository, and do not report issues with it.**
