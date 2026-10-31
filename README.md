@@ -10,6 +10,7 @@
 
 Fork of HuntAlerts 1.4.1.10 (upstream: https://projects.gamba.pro/Asuna/huntalerts), plus the changes listed under
 [Changes in this fork](#changes-in-this-fork). The only functional addition is **customisable relay messages**.
+Author of this build: PriestKos — the plugin and the idea are Asuna's, this is only a private carry-over of it.
 
 `/huntalerts` · Dalamud API 15 · .NET 10
 

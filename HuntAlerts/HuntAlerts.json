@@ -1,8 +1,8 @@
 {
-    "Author": "Asuna",
+    "Author": "PriestKos",
     "Name": "HuntAlerts",
     "Punchline": "Notifies you when hunt trains are starting soon\nSupports NA/EU/OCE/JP",
-    "Description": "Notifies you when hunt trains are starting soon\nSupports NA/EU/OCE/JP",
+    "Description": "Notifies you when hunt trains are starting soon\nSupports NA/EU/OCE/JP\n\nPrivate-use fork by PriestKos. Original plugin and idea by Asuna (https://projects.gamba.pro/Asuna/huntalerts) - do not use this fork, use https://puni.sh/api/repository/asuna instead.",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 15,
     "IconUrl": "https://projects.gamba.pro/Asuna/releases/-/raw/main/HuntAlerts/FFXIV_Hunts_logo.png",
