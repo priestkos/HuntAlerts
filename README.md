@@ -60,7 +60,7 @@ Every user-facing window and slash command in the plugin is shown above. Non-UI 
 
 ### Mock-up video
 
-The clip below is a **mock-up walkthrough** of the same HTML UI sources — **not** captures from the live game. It opens with an on-screen disclaimer and tours each mock-up with short captions and simple scripted UI actions (sidebar tabs, toggles, relay picker).
+The clip below is a **mock-up walkthrough** of the same HTML UI sources — **not** captures from the live game. It opens with an on-screen disclaimer and tours each mock-up with short captions, eased scene transitions, and scripted pointer interactions (sidebar tabs, toggles, relay picker).
 
 ![Mock-up walkthrough preview](docs/videos/mockup-walkthrough.gif)
 

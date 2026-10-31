@@ -60,6 +60,11 @@
     </div>
   </div>
   <script>
+    document.getElementById('send-test').addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      btn.classList.add('btn-pressed');
+      setTimeout(() => btn.classList.remove('btn-pressed'), 420);
+    });
     window.walkthrough = {
       toggleSargatanas() {
         const cb = document.getElementById('world-sargatanas');
