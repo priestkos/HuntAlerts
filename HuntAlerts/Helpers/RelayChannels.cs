@@ -4,7 +4,6 @@ using ECommons.Logging;
 using ECommons.Schedulers;
 using System;
 using System.Globalization;
-using System.Text;
 
 namespace HuntAlerts.Helpers;
 
@@ -82,7 +81,7 @@ public static class RelayChannels
         }
     }
 
-    private static string BuildRelayText(HuntTrainMessage entry, bool useFlag)
+    public static string BuildRelayText(HuntTrainMessage entry, bool useFlag)
     {
         var isTrain = entry.huntType == "new_hunt";
         var world = Clean(entry.huntWorld);
@@ -91,22 +90,23 @@ public static class RelayChannels
 
         var loc = useFlag ? "<flag>" : PlainLocation(entry);
 
-        var sb = new StringBuilder();
-        if (isTrain)
-            sb.Append($"{world} TRAIN: {loc}{inst}");
-        else
-            sb.Append($"S Rank {world}: {loc}{inst}");
-
-        return sb.ToString();
+        return RelayFormat.Apply(
+            isTrain ? HuntAlerts.C.TrainRelayFormat : HuntAlerts.C.SRankRelayFormat,
+            isTrain ? RelayFormat.DefaultTrain : RelayFormat.DefaultSRank,
+            world, Zone(entry), Coords(entry), loc, inst, isTrain ? "TRAIN" : "S Rank");
     }
+
+    private static string Zone(HuntTrainMessage entry) => Clean(entry.startZone);
+
+    private static string Coords(HuntTrainMessage entry) =>
+        entry.mapLocationX == 0f && entry.mapLocationY == 0f
+            ? ""
+            : $"({entry.mapLocationX.ToString("F2", CultureInfo.InvariantCulture)}, {entry.mapLocationY.ToString("F2", CultureInfo.InvariantCulture)})";
 
     private static string PlainLocation(HuntTrainMessage entry)
     {
-        var zone = Clean(entry.startZone);
-        var hasCoords = !(entry.mapLocationX == 0f && entry.mapLocationY == 0f);
-        var coords = hasCoords
-            ? $"({entry.mapLocationX.ToString("F2", CultureInfo.InvariantCulture)}, {entry.mapLocationY.ToString("F2", CultureInfo.InvariantCulture)})"
-            : "";
+        var zone = Zone(entry);
+        var coords = Coords(entry);
         if (zone.Length > 0 && coords.Length > 0) return $"{zone} {coords}";
         return zone.Length > 0 ? zone : coords;
     }

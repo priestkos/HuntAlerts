@@ -269,7 +269,7 @@ public class NotifyWindow : Window
                 }
 
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"{(HuntAlerts.C.EchoTestRelay ? " [DEBUG ]echo " : "")}Relay to {channelLabel}");
+                    ImGui.SetTooltip($"{(HuntAlerts.C.EchoTestRelay ? " [DEBUG ]echo " : "")}Relay to {channelLabel}\n{RelayChannels.BuildRelayText(entry, HuntAlerts.C.RelayFlagLink)}");
 
                 ImGui.SameLine(0, 2);
 

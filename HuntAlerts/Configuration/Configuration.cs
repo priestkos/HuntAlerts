@@ -140,6 +140,8 @@ namespace HuntAlerts
 
         public bool EchoTestRelay { get; set; } = false;
         public bool RelayFlagLink { get; set; } = true;
+        public string TrainRelayFormat { get; set; } = Helpers.RelayFormat.DefaultTrain;
+        public string SRankRelayFormat { get; set; } = Helpers.RelayFormat.DefaultSRank;
         public bool WorldArrowEnabled { get; set; } = true;
         public bool ArrowChatPickup { get; set; } = true;
         public bool ArrowChatPickupShout { get; set; } = true;

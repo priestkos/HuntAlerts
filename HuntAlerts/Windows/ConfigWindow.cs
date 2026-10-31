@@ -391,6 +391,24 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip("On: relays include the game <flag> link (opens the map briefly to set it), falling back to plaintext coordinates if the map can't be opened.\nOff: relays always use plaintext coordinates.");
 
+        var trainFmt = HuntAlerts.C.TrainRelayFormat ?? "";
+        if (ImGui.InputTextWithHint("Train Relay Message", RelayFormat.DefaultTrain, ref trainFmt, 200))
+        { HuntAlerts.C.TrainRelayFormat = trainFmt; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip($"Blank restores the default. Tokens: {RelayFormat.Tokens}\n{{loc}} is the <flag> link or plain coords, {{type}} is TRAIN or S Rank.");
+        ImGui.SameLine();
+        if (ImGui.SmallButton("Reset##trainRelayFmt"))
+        { HuntAlerts.C.TrainRelayFormat = RelayFormat.DefaultTrain; HuntAlerts.C.Save(); }
+
+        var sRankFmt = HuntAlerts.C.SRankRelayFormat ?? "";
+        if (ImGui.InputTextWithHint("S Rank Relay Message", RelayFormat.DefaultSRank, ref sRankFmt, 200))
+        { HuntAlerts.C.SRankRelayFormat = sRankFmt; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip($"Blank restores the default. Tokens: {RelayFormat.Tokens}\n{{loc}} is the <flag> link or plain coords, {{type}} is TRAIN or S Rank.");
+        ImGui.SameLine();
+        if (ImGui.SmallButton("Reset##sRankRelayFmt"))
+        { HuntAlerts.C.SRankRelayFormat = RelayFormat.DefaultSRank; HuntAlerts.C.Save(); }
+
         var snoozeOpts  = new (string Name, int Value)[] { ("5 min", 5), ("15 min", 15), ("30 min", 30), ("60 min", 60), ("2 hours", 120) };
         var snoozeNames = snoozeOpts.Select(o => o.Name).ToArray();
         var snoozeIdx   = Array.FindIndex(snoozeOpts, o => o.Value == HuntAlerts.C.SnoozeDefaultMinutes);
