@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../../screenshots/src/imgui-common.css" />
+  <link rel="stylesheet" href="walkthrough-overlay.css" />
+  <title>05 Filters interactive</title>
+</head>
+<body>
+  <div class="frame-root">
+    <div class="mosaic">
+      <div class="imgui-window">
+        <div class="imgui-titlebar"><span>HuntAlerts — Hunt Trains</span></div>
+        <div class="imgui-body">
+          <div class="section-header">Hunt Train Notifications</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Centurio (ARR / HW / SB)</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Shadowbringers</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Endwalker</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Dawntrail</div>
+        </div>
+      </div>
+      <div class="imgui-window">
+        <div class="imgui-titlebar"><span>HuntAlerts — Train Worlds</span></div>
+        <div class="imgui-body">
+          <div class="section-header">Hunt Train Worlds</div>
+          <input class="input" placeholder="Filter worlds..." style="max-width:220px;margin-bottom:6px" />
+          <div class="accent">Aether <span class="subtle">(NA) 8/8 enabled</span></div>
+          <table class="world-grid">
+            <tr><td><input type="checkbox" checked /> Adamantoise</td><td><input type="checkbox" checked /> Cactuar</td></tr>
+            <tr><td><input type="checkbox" checked /> Faerie</td><td><input type="checkbox" id="world-sargatanas" /> Sargatanas</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="imgui-window">
+        <div class="imgui-titlebar"><span>HuntAlerts — S Ranks &amp; Connection</span></div>
+        <div class="imgui-body">
+          <div class="section-header">S Rank Options</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> S Ranks Enabled</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Show kill notifications</div>
+          <div class="section-header">Integrations</div>
+          <div class="checkbox-row"><input type="checkbox" checked /> Enable Lifestream Integration</div>
+          <div class="section-header">Connection</div>
+          <span class="pill pill-connected">CONNECTED</span>
+          <span class="subtle"> · 2m ago</span>
+        </div>
+      </div>
+      <div class="imgui-window">
+        <div class="imgui-titlebar"><span>Debug &amp; Notice</span></div>
+        <div class="imgui-body">
+          <div class="section-header">Simulate Hunt Message</div>
+          <div>Type <span class="combo">Hunt Train</span></div>
+          <div style="margin:4px 0">World <input class="input" value="Example World" style="max-width:140px" /></div>
+          <div style="margin:4px 0"><span class="btn btn-accent" id="send-test" style="font-size:11px">✉ Send Test Hunt</span></div>
+          <div class="separator"></div>
+          <div style="color:#90d890;font-weight:600">👥 Alerting Restored</div>
+          <p style="font-size:11px;margin-top:6px">One-time notice window (HuntAlerts - Notice)</p>
+          <span class="btn btn-success" style="font-size:11px;margin-top:8px">✓ Understood</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    window.walkthrough = {
+      toggleSargatanas() {
+        const cb = document.getElementById('world-sargatanas');
+        cb.checked = !cb.checked;
+      },
+      pressSendTest() {
+        const btn = document.getElementById('send-test');
+        btn.classList.add('btn-pressed');
+        setTimeout(() => btn.classList.remove('btn-pressed'), 400);
+      },
+    };
+  </script>
+</body>
+</html>

@@ -59,6 +59,16 @@ Screenshots are mock-ups illustrating the UI, not captures from the live game. H
 
 Every user-facing window and slash command in the plugin is shown above. Non-UI behaviour (socket parsing, IPC, config file path) is described in text elsewhere in this README.
 
+### Mock-up video
+
+The clip below is a **mock-up walkthrough** of the same HTML UI sources — **not** captures from the live game. It opens with an on-screen disclaimer and tours each mock-up with short captions and simple scripted UI actions (sidebar tabs, toggles, relay picker).
+
+![Mock-up walkthrough preview](docs/videos/mockup-walkthrough.gif)
+
+[Download full walkthrough (MP4)](docs/videos/mockup-walkthrough.mp4)
+
+Regenerate PNGs with `node render.mjs` in `docs/screenshots/src/`; regenerate the video and GIF with `./render.sh` in `docs/videos/src/` (requires Node, Playwright Chromium, and ffmpeg).
+
 ## Changes in this fork
 
 **Customisable relay messages** (the only functional change):

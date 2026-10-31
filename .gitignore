@@ -3,3 +3,5 @@ obj/
 bin/
 *.user
 docs/screenshots/src/node_modules/
+docs/videos/src/node_modules/
+docs/videos/src/.video-tmp/

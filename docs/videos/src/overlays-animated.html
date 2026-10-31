@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../../screenshots/src/imgui-common.css" />
+  <link rel="stylesheet" href="walkthrough-overlay.css" />
+  <title>03 Overlays animated</title>
+</head>
+<body>
+  <div class="scene-backdrop">
+    <div class="toast toast-enter" id="toast">
+      <span class="badge badge-srank">S RANK</span>
+      <span>Endwalker S Rank</span>
+      <span class="subtle">·</span>
+      <span class="badge badge-world">Example World</span>
+      <span class="badge badge-srank">Aether</span>
+      <span class="subtle">· 03:05 PM</span>
+    </div>
+    <div class="nav-arrow" id="nav-arrow">
+      <svg width="48" height="48" viewBox="0 0 48 48">
+        <polygon points="24,4 8,40 24,28 40,40" fill="#ffc850" stroke="#c05a08" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="dist-label" id="dist-label">142y</div>
+    <div class="chat-log" id="chat-log">
+      <div class="chat-line chat-train" style="opacity:0" id="chat1">[HuntAlerts] Example World TRAIN: Yak T'el (23.10, 23.50) i2</div>
+      <div class="chat-line chat-srank" style="opacity:0" id="chat2">[HuntAlerts] S Rank Example World: Thavnair (18.2, 12.4)</div>
+      <div class="chat-line subtle" style="opacity:0" id="chat3">[HuntAlerts] S Rank kill — Example Mob on Example World</div>
+    </div>
+  </div>
+  <script>
+    window.walkthrough = {
+      showToast() {
+        document.getElementById('toast').classList.add('visible');
+      },
+      showChatLines() {
+        ['chat1', 'chat2', 'chat3'].forEach((id, i) => {
+          setTimeout(() => {
+            document.getElementById(id).style.opacity = '1';
+            document.getElementById(id).style.transition = 'opacity 0.4s ease';
+          }, i * 350);
+        });
+      },
+      pulseNav() {
+        const el = document.getElementById('nav-arrow');
+        el.style.transform = 'scale(1.08)';
+        el.style.transition = 'transform 0.35s ease';
+        setTimeout(() => { el.style.transform = 'scale(1)'; }, 350);
+      },
+    };
+  </script>
+</body>
+</html>

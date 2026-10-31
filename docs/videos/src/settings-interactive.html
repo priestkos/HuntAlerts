@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="../../screenshots/src/imgui-common.css" />
+  <link rel="stylesheet" href="walkthrough-overlay.css" />
+  <title>04 Settings interactive</title>
+  <style>
+    .w-config { width: 620px; }
+    .whatsnew { position:absolute; right:24px; top:24px; width:380px; opacity:.95; }
+  </style>
+</head>
+<body>
+  <div class="frame-root" style="position:relative">
+    <div class="imgui-window w-config">
+      <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
+      <div class="config-layout">
+        <div class="sidebar">
+          <div class="nav-item clickable" data-panel="trains"><span>🚂</span> Hunt Trains</div>
+          <div class="nav-item clickable" data-panel="train-worlds"><span>🌐</span> Train Worlds</div>
+          <div class="nav-item clickable" data-panel="sranks"><span>💀</span> S Ranks</div>
+          <div class="nav-item clickable" data-panel="srank-worlds"><span>🗺</span> S Rank Worlds</div>
+          <div class="nav-item clickable selected" data-panel="general"><span>⚙</span> General</div>
+          <div class="nav-item clickable" data-panel="integrations"><span>🔌</span> Integrations</div>
+          <div class="nav-item clickable" data-panel="connection"><span>🖥</span> Connection</div>
+          <div class="separator"></div>
+          <div class="nav-item accent clickable" data-panel="whatsnew"><span>🎁</span> What's New</div>
+          <div class="nav-item"><span>💬</span> Discord</div>
+        </div>
+        <div class="config-body" style="font-size:12px;max-height:480px;overflow:hidden">
+          <div class="config-panel active" id="panel-general">
+            <div class="section-header">General Options</div>
+            <div class="checkbox-row"><input type="checkbox" id="dup-msgs" checked /> Suppress Duplicate Messages</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Flag Map automatically on arrival</div>
+            <div class="checkbox-row"><input type="checkbox" /> Show data center in notifications</div>
+            <div class="section-header">Chat</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Show alerts in chat</div>
+            <div class="section-header">Notifications</div>
+            <div class="checkbox-row"><input type="checkbox" id="flag-link" checked /> Relay location as a &lt;flag&gt; link</div>
+            <div style="margin:6px 0">Train Relay Message <input class="input" value="{world} TRAIN: {loc}{inst}" /> <span class="btn btn-accent" style="padding:2px 6px;font-size:11px">Reset</span></div>
+            <div style="margin:6px 0">S Rank Relay Message <input class="input" value="S Rank {world}: {loc}{inst}" /> <span class="btn btn-accent" style="padding:2px 6px;font-size:11px">Reset</span></div>
+            <div style="margin:4px 0">Snooze Duration <span class="combo">30 min</span> <span class="btn btn-warn" style="font-size:11px">🌙 Snooze 30m</span></div>
+            <div class="section-header">Toast Banner</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Show a toast banner for new alerts</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Show navigation arrow</div>
+          </div>
+          <div class="config-panel" id="panel-trains">
+            <div class="section-header">Hunt Train Notifications</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Centurio (ARR / HW / SB)</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Shadowbringers</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Endwalker</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Dawntrail</div>
+            <div class="section-header">Hunt Train Scope</div>
+            <div class="radio-row"><input type="radio" name="scope" checked /> All configured datacenters/worlds</div>
+            <div class="radio-row"><input type="radio" name="scope" /> Current datacenter only</div>
+          </div>
+          <div class="config-panel" id="panel-train-worlds">
+            <div class="section-header">Hunt Train Worlds</div>
+            <input class="input" placeholder="Filter worlds..." style="max-width:220px;margin-bottom:6px" />
+            <div class="accent">Aether <span class="subtle">(NA) 8/8 enabled</span></div>
+          </div>
+          <div class="config-panel" id="panel-sranks">
+            <div class="section-header">S Rank Options</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> S Ranks Enabled</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Show kill notifications</div>
+          </div>
+          <div class="config-panel" id="panel-srank-worlds">
+            <div class="section-header">S Rank Worlds</div>
+            <input class="input" placeholder="Filter worlds..." style="max-width:180px" />
+          </div>
+          <div class="config-panel" id="panel-integrations">
+            <div class="section-header">Integrations</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Enable Lifestream Integration</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Ctrl-Click messages to teleport</div>
+          </div>
+          <div class="config-panel" id="panel-connection">
+            <div class="section-header">Connection</div>
+            <span class="pill pill-connected">CONNECTED</span>
+            <span class="subtle"> · 2m ago</span>
+          </div>
+          <div class="config-panel" id="panel-whatsnew">
+            <div class="accent">🎁 What's New in HuntAlerts</div>
+            <p class="subtle" style="margin-top:8px">Version 1.4.1.8 changelog (mock-up)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="imgui-window whatsnew" id="whatsnew-window">
+      <div class="imgui-titlebar"><span>HuntAlerts - What's New</span></div>
+      <div class="imgui-body" style="font-size:12px">
+        <span class="accent">🎁 What's New in HuntAlerts</span>
+        <div class="separator"></div>
+        <div class="accent">▼ Version 1.4.1.8</div>
+        <p class="subtle" style="margin-top:6px">Features · Bug Fixes (changelog entries)</p>
+        <span class="btn btn-accent">✓ Got it</span>
+      </div>
+    </div>
+  </div>
+  <script>
+    function selectPanel(panelId) {
+      document.querySelectorAll('.nav-item.clickable').forEach((el) => {
+        el.classList.toggle('selected', el.dataset.panel === panelId);
+      });
+      document.querySelectorAll('.config-panel').forEach((el) => {
+        el.classList.toggle('active', el.id === `panel-${panelId}`);
+      });
+      document.getElementById('whatsnew-window').style.display =
+        panelId === 'whatsnew' ? 'none' : '';
+    }
+    document.querySelectorAll('.nav-item.clickable').forEach((el) => {
+      el.addEventListener('click', () => selectPanel(el.dataset.panel));
+    });
+    window.walkthrough = {
+      selectPanel,
+      toggleFlagLink() {
+        const cb = document.getElementById('flag-link');
+        cb.checked = !cb.checked;
+      },
+    };
+  </script>
+</body>
+</html>
