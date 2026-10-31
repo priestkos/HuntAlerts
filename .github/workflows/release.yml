@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install the Dalamud development distribution
+        shell: pwsh
+        run: |
+          $dest = Join-Path $env:APPDATA 'XIVLauncher\addon\Hooks\dev'
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Invoke-WebRequest -UseBasicParsing -Uri 'https://goatcorp.github.io/dalamud-distrib/latest.zip' -OutFile dalamud.zip
+          Expand-Archive -Path dalamud.zip -DestinationPath $dest -Force
+
+      - name: Build huntalerts
+        run: dotnet build HuntAlerts/HuntAlerts.csproj -c Release
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $built = Get-ChildItem -Recurse -Filter latest.zip |
+            Where-Object { $_.FullName -match '\\bin\\Release\\' } |
+            Select-Object -First 1
+          if (-not $built) { throw 'latest.zip not found under bin/Release' }
+          Copy-Item $built.FullName -Destination latest.zip -Force
+
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path latest.zip))
+          try {
+            $jsonEntry = $archive.Entries | Where-Object { $_.Name -like '*.json' } | Select-Object -First 1
+            if (-not $jsonEntry) { throw 'Plugin manifest .json not found in latest.zip' }
+            $reader = New-Object System.IO.StreamReader($jsonEntry.Open())
+            try {
+              $manifest = $reader.ReadToEnd() | ConvertFrom-Json
+            } finally {
+              $reader.Close()
+            }
+          } finally {
+            $archive.Dispose()
+          }
+
+          $assemblyVersion = [string]$manifest.AssemblyVersion
+          if ([string]::IsNullOrWhiteSpace($assemblyVersion)) {
+            throw 'AssemblyVersion missing from plugin manifest'
+          }
+
+          if ($env:GITHUB_EVENT_NAME -eq 'push') {
+            $tag = $env:GITHUB_REF_NAME
+            $tagVersion = $tag -replace '^v', ''
+            if ($tagVersion -ne $assemblyVersion) {
+              throw "Tag version '$tagVersion' does not match AssemblyVersion '$assemblyVersion'"
+            }
+            gh release create $tag latest.zip --title $tag --generate-notes
+            exit 0
+          }
+
+          $tag = "v$assemblyVersion"
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $tag already exists; skipping."
+            exit 0
+          }
+          gh release create $tag latest.zip --title $tag --generate-notes
