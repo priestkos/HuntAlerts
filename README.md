@@ -22,8 +22,7 @@ on-screen toast; trains and S ranks can be relayed into a chat channel with one 
 
 ## Screenshots
 
-Screenshots are mock-ups illustrating the UI, not captures from the live game. HTML sources live under
-`docs/screenshots/src/` (run `node render.mjs` from that folder after `npm install` to regenerate PNGs).
+Screenshots are mock-ups illustrating the UI, not captures from the live game.
 
 | | |
 |---|---|
@@ -66,8 +65,6 @@ The clip below is a **mock-up walkthrough** of the same HTML UI sources — **no
 ![Mock-up walkthrough preview](docs/videos/mockup-walkthrough.gif)
 
 [Download full walkthrough (MP4)](docs/videos/mockup-walkthrough.mp4)
-
-Regenerate PNGs with `node render.mjs` in `docs/screenshots/src/`; regenerate the video and GIF with `./render.sh` in `docs/videos/src/` (requires Node, Playwright Chromium, and ffmpeg).
 
 ## Changes in this fork
 
