@@ -43,12 +43,31 @@ jobs:
           if (-not $built) { throw 'latest.zip not found under bin/Release' }
           Copy-Item $built.FullName -Destination latest.zip -Force
 
+          $pluginAssemblyName = [System.IO.Path]::GetFileNameWithoutExtension('HuntAlerts/HuntAlerts.csproj')
+
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path latest.zip))
           try {
-            $jsonEntry = $archive.Entries | Where-Object { $_.Name -like '*.json' } | Select-Object -First 1
-            if (-not $jsonEntry) { throw 'Plugin manifest .json not found in latest.zip' }
-            $reader = New-Object System.IO.StreamReader($jsonEntry.Open())
+            $dllEntries = @($archive.Entries | Where-Object { $_.Name -like '*.dll' })
+            if ($dllEntries.Count -eq 0) {
+              throw 'No plugin .dll found inside latest.zip'
+            }
+
+            $dllEntry = $dllEntries | Where-Object {
+              [System.IO.Path]::GetFileNameWithoutExtension($_.Name) -ieq $pluginAssemblyName
+            } | Select-Object -First 1
+            if (-not $dllEntry) {
+              $found = ($dllEntries | ForEach-Object { $_.Name }) -join ', '
+              throw "Plugin .dll matching assembly name '$pluginAssemblyName' not found inside latest.zip (found: $found)"
+            }
+
+            $manifestName = [System.IO.Path]::ChangeExtension($dllEntry.Name, '.json')
+            $manifestEntry = $archive.Entries | Where-Object { $_.Name -ieq $manifestName } | Select-Object -First 1
+            if (-not $manifestEntry) {
+              throw "Manifest '$manifestName' not found inside latest.zip (expected alongside $($dllEntry.Name))"
+            }
+
+            $reader = New-Object System.IO.StreamReader($manifestEntry.Open())
             try {
               $manifest = $reader.ReadToEnd() | ConvertFrom-Json
             } finally {
