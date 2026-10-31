@@ -20,6 +20,45 @@ Notifies you when hunt trains are starting soon and when S ranks are found, on N
 feed the upstream plugin uses. Alerts arrive as in-game chat lines, as a notification window, and optionally as an
 on-screen toast; trains and S ranks can be relayed into a chat channel with one button.
 
+## Screenshots
+
+Screenshots are mock-ups illustrating the UI, not captures from the live game. HTML sources live under
+`docs/screenshots/src/` (run `node render.mjs` from that folder after `npm install` to regenerate PNGs).
+
+| | |
+|---|---|
+| ![Recent hunts list](docs/screenshots/01-recent-hunts.png) | **Recent Hunts** (`/huntalerts`, Dalamud *Open Dalamud UI*): cached alert cards, **Clear**, title-bar settings/snooze. |
+| ![Notification window](docs/screenshots/02-notification-window.png) | **Notification window**: train/S rank details, **Teleport**, **Flag on Map**, **Party Finder**, **Nav**, **Relay** (+ channel picker), relay preview on hover. |
+| ![Toast, nav arrow, chat](docs/screenshots/03-overlays-chat-toast-nav.png) | **Toast banner**, **navigation arrow** (distance label), and **chat alerts** (including S rank kill line when enabled). |
+| ![General settings](docs/screenshots/04-settings-general.png) | **Settings** (`/huntalerts settings`): **General**, chat/relay templates, snooze, sounds, toast & arrow options; **What's New** window. |
+| ![Filters & debug](docs/screenshots/05-settings-filters-debug-notice.png) | **Hunt Trains** / **Train Worlds**, **S Ranks** / **S Rank Worlds**, **Integrations**, **Connection**, **Debug** simulate, **Alerting Restored** notice. |
+
+### Feature coverage (UI)
+
+| Feature | Screenshot |
+|---|---|
+| `/huntalerts` → HuntAlerts History | 01 |
+| `/huntalerts settings` / `s` → HuntAlerts config | 04, 05 |
+| `/huntalerts debug` / `d` → Debug tab | 05 |
+| Notification popup (HuntAlerts Notification) | 02 |
+| Recent hunt card → opens notification | 01 → 02 |
+| Snooze / wake (history title bar & General tab) | 01, 04 |
+| Relay + one-off channel picker + `<flag>` templates | 02, 04 |
+| Teleport / Flag on Map / Party Finder / Nav | 02 |
+| Chat alerts & text colours | 03, 04 |
+| Toast banner (duration, animation, position) | 03, 04 |
+| Navigation arrow & chat flag pickup (Shout/Yell/Party) | 03, 04 |
+| Hunt train groups, scope, Train Worlds | 05 |
+| S ranks, kill notifications, scope, S Rank Worlds | 05 |
+| Lifestream integration & Ctrl-click teleport | 05 |
+| Socket connection status, reconnect, activity log | 05 |
+| Debug: Simulate Hunt Message | 05 |
+| What's New changelog | 04 |
+| Alerting Restored notice (HuntAlerts - Notice) | 05 |
+| Sidebar: Discord link | 04 |
+
+Every user-facing window and slash command in the plugin is shown above. Non-UI behaviour (socket parsing, IPC, config file path) is described in text elsewhere in this README.
+
 ## Changes in this fork
 
 **Customisable relay messages** (the only functional change):

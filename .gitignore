@@ -2,3 +2,4 @@
 obj/
 bin/
 *.user
+docs/screenshots/src/node_modules/
