@@ -2,9 +2,23 @@ name: Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'images/**'
+      - 'screenshots/**'
+      - '*.png'
+      - '*.mp4'
+      - '.github/workflows/build.yml'
   workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -21,7 +35,106 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Prepare automatic release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: auto
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ($env:GITHUB_EVENT_NAME -eq 'pull_request') {
+            throw 'Automatic releases must not run from pull requests.'
+          }
+
+          function Get-FourPartVersion([string]$value) {
+            $parts = @($value.Split('.'))
+            while ($parts.Count -lt 4) { $parts += '0' }
+            if ($parts.Count -ne 4) {
+              throw "Expected a four-part version, got '$value'"
+            }
+            return [version]::new(
+              [int]$parts[0],
+              [int]$parts[1],
+              [int]$parts[2],
+              [int]$parts[3]
+            )
+          }
+
+          function Format-FourPartVersion([version]$ver) {
+            return "$($ver.Major).$($ver.Minor).$($ver.Build).$($ver.Revision)"
+          }
+
+          $sha = $env:GITHUB_SHA
+          $page = 1
+          while ($true) {
+            $batch = gh api "/repos/$env:GITHUB_REPOSITORY/releases?per_page=100&page=$page" | ConvertFrom-Json
+            if (-not $batch -or @($batch).Count -eq 0) { break }
+            foreach ($release in @($batch)) {
+              $target = [string]$release.target_commitish
+              if ($target -eq $sha -or ($sha.Length -ge 7 -and $target -eq $sha.Substring(0, 7))) {
+                Write-Host "Commit $sha already has release $($release.tag_name); skipping."
+                "skip=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+                exit 0
+              }
+            }
+            if (@($batch).Count -lt 100) { break }
+            $page++
+          }
+
+          [xml]$proj = Get-Content HuntAlerts/HuntAlerts.csproj
+          $csprojVersion = Get-FourPartVersion ([string]$proj.Project.PropertyGroup.Version)
+
+          $latestReleaseVersion = $null
+          $page = 1
+          while ($true) {
+            $batch = gh api "/repos/$env:GITHUB_REPOSITORY/releases?per_page=100&page=$page" | ConvertFrom-Json
+            if (-not $batch -or @($batch).Count -eq 0) { break }
+            foreach ($release in @($batch)) {
+              if ($release.tag_name -notmatch '^v(.+)$') { continue }
+              $candidate = Get-FourPartVersion $Matches[1]
+              if (-not $latestReleaseVersion -or $candidate -gt $latestReleaseVersion) {
+                $latestReleaseVersion = $candidate
+              }
+            }
+            if (@($batch).Count -lt 100) { break }
+            $page++
+          }
+
+          if (-not $latestReleaseVersion) {
+            $nextVersion = Format-FourPartVersion $csprojVersion
+          } elseif ($csprojVersion -gt $latestReleaseVersion) {
+            $nextVersion = Format-FourPartVersion $csprojVersion
+          } else {
+            $bumped = [version]::new(
+              $latestReleaseVersion.Major,
+              $latestReleaseVersion.Minor,
+              $latestReleaseVersion.Build,
+              $latestReleaseVersion.Revision + 1
+            )
+            $nextVersion = Format-FourPartVersion $bumped
+          }
+
+          $tag = "v$nextVersion"
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release tag $tag already exists; skipping."
+            "skip=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            exit 0
+          }
+
+          $tagRef = gh api "/repos/$env:GITHUB_REPOSITORY/git/ref/tags/$tag" 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Tag $tag already exists; skipping."
+            "skip=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            exit 0
+          }
+
+          Write-Host "Next automatic release version: $nextVersion (tag $tag)"
+          "skip=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "version=$nextVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
       - name: Install the Dalamud development distribution
+        if: steps.auto.outputs.skip != 'true'
         shell: pwsh
         run: |
           $dest = Join-Path $env:APPDATA 'XIVLauncher\addon\Hooks\dev'
@@ -30,9 +143,26 @@ jobs:
           Expand-Archive -Path dalamud.zip -DestinationPath $dest -Force
 
       - name: Build huntalerts
-        run: dotnet build HuntAlerts/HuntAlerts.csproj -c Release
+        if: steps.auto.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $buildArgs = @('build', 'HuntAlerts/HuntAlerts.csproj', '-c', 'Release')
+          if ($env:GITHUB_EVENT_NAME -eq 'push' -and $env:GITHUB_REF -eq 'refs/heads/main') {
+            $version = '${{ steps.auto.outputs.version }}'
+            if ([string]::IsNullOrWhiteSpace($version)) {
+              throw 'Automatic release version was not computed.'
+            }
+            $buildArgs += @(
+              "-p:Version=$version",
+              "-p:AssemblyVersion=$version",
+              "-p:FileVersion=$version"
+            )
+          }
+          & dotnet @buildArgs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Create GitHub release
+        if: steps.auto.outputs.skip != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -82,13 +212,23 @@ jobs:
             throw 'AssemblyVersion missing from plugin manifest'
           }
 
-          if ($env:GITHUB_EVENT_NAME -eq 'push') {
+          if ($env:GITHUB_EVENT_NAME -eq 'push' -and $env:GITHUB_REF -like 'refs/tags/v*') {
             $tag = $env:GITHUB_REF_NAME
             $tagVersion = $tag -replace '^v', ''
             if ($tagVersion -ne $assemblyVersion) {
               throw "Tag version '$tagVersion' does not match AssemblyVersion '$assemblyVersion'"
             }
             gh release create $tag latest.zip --title $tag --generate-notes
+            exit 0
+          }
+
+          if ($env:GITHUB_EVENT_NAME -eq 'push' -and $env:GITHUB_REF -eq 'refs/heads/main') {
+            $expectedVersion = '${{ steps.auto.outputs.version }}'
+            if ($assemblyVersion -ne $expectedVersion) {
+              throw "AssemblyVersion '$assemblyVersion' does not match computed release version '$expectedVersion'"
+            }
+            $tag = "v$expectedVersion"
+            gh release create $tag latest.zip --target $env:GITHUB_SHA --generate-notes
             exit 0
           }
 

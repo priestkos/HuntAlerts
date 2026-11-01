@@ -130,6 +130,8 @@ dotnet build HuntAlerts/HuntAlerts.csproj -c Release
 
 Output: `HuntAlerts/bin/Release/HuntAlerts.dll` and the generated `HuntAlerts.json` manifest next to it.
 
+Releases are published automatically on each push to `main` that changes the plugin (not docs-only paths); the version is the next four-part number above the latest GitHub release.
+
 ## Install (dev plugin)
 
 1. Copy `HuntAlerts.dll` **and** `HuntAlerts.json` into `%APPDATA%\XIVLauncher\devPlugins\HuntAlerts\`.
