@@ -115,23 +115,26 @@ jobs:
           }
 
           $tag = "v$nextVersion"
-          gh release view $tag 2>$null
+          gh release view $tag 2>$null | Out-Null
           if ($LASTEXITCODE -eq 0) {
             Write-Host "Release tag $tag already exists; skipping."
             "skip=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
             exit 0
           }
+          $global:LASTEXITCODE = 0
 
-          $tagRef = gh api "/repos/$env:GITHUB_REPOSITORY/git/ref/tags/$tag" 2>$null
+          gh api "/repos/$env:GITHUB_REPOSITORY/git/ref/tags/$tag" 2>$null | Out-Null
           if ($LASTEXITCODE -eq 0) {
             Write-Host "Tag $tag already exists; skipping."
             "skip=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
             exit 0
           }
+          $global:LASTEXITCODE = 0
 
           Write-Host "Next automatic release version: $nextVersion (tag $tag)"
           "skip=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "version=$nextVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          exit 0
 
       - name: Install the Dalamud development distribution
         if: steps.auto.outputs.skip != 'true'
@@ -141,6 +144,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
           Invoke-WebRequest -UseBasicParsing -Uri 'https://goatcorp.github.io/dalamud-distrib/latest.zip' -OutFile dalamud.zip
           Expand-Archive -Path dalamud.zip -DestinationPath $dest -Force
+          exit 0
 
       - name: Build huntalerts
         if: steps.auto.outputs.skip != 'true'
@@ -160,6 +164,7 @@ jobs:
           }
           & dotnet @buildArgs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          exit 0
 
       - name: Create GitHub release
         if: steps.auto.outputs.skip != 'true'
@@ -233,9 +238,12 @@ jobs:
           }
 
           $tag = "v$assemblyVersion"
-          gh release view $tag 2>$null
+          gh release view $tag 2>$null | Out-Null
           if ($LASTEXITCODE -eq 0) {
             Write-Host "Release $tag already exists; skipping."
             exit 0
           }
+          $global:LASTEXITCODE = 0
           gh release create $tag latest.zip --title $tag --generate-notes
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          exit 0
