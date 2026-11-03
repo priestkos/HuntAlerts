@@ -164,6 +164,10 @@ public class NotifyWindow : Window
         ImGui.PopStyleColor();
     }
 
+    // shortcut: one global relay throttle, not per hunt; per-hunt keys if users need back-to-back relays of different hunts.
+    private const string RelayThrottleKey = "HuntAlertsRelay";
+    private const int    RelayThrottleMs  = 3000;
+
     private string navMsg = "";
     private long   navMsgAtMs = -1;
 
@@ -255,21 +259,25 @@ public class NotifyWindow : Window
                     : "None";
 
                 ImGui.SameLine();
-                if (Components.ActionButton(FontAwesomeIcon.Bullhorn, "Relay", !HuntAlerts.C.EchoTestRelay ? ButtonRole.Success : ButtonRole.Warn))
+                if (Components.ActionButton(FontAwesomeIcon.Bullhorn, "Relay", !HuntAlerts.C.EchoTestRelay ? ButtonRole.Success : ButtonRole.Warn)
+                    && EzThrottler.Throttle(RelayThrottleKey, RelayThrottleMs))
                 {
                     var useFlag = HuntAlerts.C.RelayFlagLink && SetRelayFlag(entry);
-                    var tm = new TaskManager();
                     foreach (var channel in selectedChannels)
                     {
                         if (channel.Display.StartsWith("Linkshell") && Svc.PlayerState.HomeWorld.RowId != Svc.PlayerState.CurrentWorld.RowId) continue;
-                        tm.Enqueue(() => RelayChannels.RelayMessage(entry, channel.Command, useFlag));
-                        tm.EnqueueDelay(1000 / 60);
+                        Service.TaskManager.Enqueue(() => RelayChannels.RelayMessage(entry, channel.Command, useFlag));
+                        Service.TaskManager.EnqueueDelay(1000); // keep chat sends >= 1 s apart
                     }
 
                 }
 
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip($"{(HuntAlerts.C.EchoTestRelay ? " [DEBUG ]echo " : "")}Relay to {channelLabel}\n{RelayChannels.BuildRelayText(entry, HuntAlerts.C.RelayFlagLink)}");
+                {
+                    // Same condition as the send path, minus SetRelayFlag's map side effects.
+                    var previewFlag = HuntAlerts.C.RelayFlagLink && entry.startTerritoryTypeId != 0 && entry.mapLocation != Vector2.Zero;
+                    ImGui.SetTooltip($"{(HuntAlerts.C.EchoTestRelay ? " [DEBUG ]echo " : "")}Relay to {channelLabel}\n{RelayChannels.BuildRelayText(entry, previewFlag)}");
+                }
 
                 ImGui.SameLine(0, 2);
 
@@ -295,7 +303,7 @@ public class NotifyWindow : Window
                             if (ch.Display.StartsWith("Linkshell")) display += Utilities.GetLinkshellName(uint.Parse(ch.Display[^1].ToString()) - 1);
                             else display += Utilities.GetCrossLinkshellName(uint.Parse(ch.Display[^1].ToString()) - 1);
                         }
-                        if (ImGui.MenuItem($"{display}  {ch.Command}"))
+                        if (ImGui.MenuItem($"{display}  {ch.Command}") && EzThrottler.Throttle(RelayThrottleKey, RelayThrottleMs))
                         {
                             var useFlag = HuntAlerts.C.RelayFlagLink && SetRelayFlag(entry);
                             RelayChannels.RelayMessage(entry, ch.Command, useFlag);

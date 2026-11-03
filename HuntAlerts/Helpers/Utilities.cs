@@ -46,11 +46,16 @@ namespace HuntAlerts.Helpers
                     }
                     Service.TaskManager.Enqueue(() =>
                     {
-                        if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("LookingForGroup", out var addon))
+                        if (GenericHelpers.TryGetAddonByName<AtkUnitBase>("LookingForGroup", out var addon) && addon != null)
                         {
+                            if (addon->UldManager.NodeListCount <= 35) { PluginLog.Warning("LookingForGroup: unexpected node layout, skipping hunt tab select"); return true; }
                             var btn = addon->UldManager.NodeList[35];
-                            var enabled = btn->GetAsAtkComponentNode()->Component->UldManager.NodeList[2]->Alpha_2 == 255;
-                            var selected = btn->GetAsAtkComponentNode()->Component->UldManager.NodeList[4]->GetAsAtkImageNode()->PartId == 0;
+                            var comp = btn == null ? null : btn->GetAsAtkComponentNode();
+                            var uld = comp == null || comp->Component == null ? null : &comp->Component->UldManager;
+                            if (uld == null || uld->NodeListCount <= 4 || uld->NodeList[2] == null || uld->NodeList[4] == null || uld->NodeList[4]->GetAsAtkImageNode() == null)
+                            { PluginLog.Warning("LookingForGroup: hunt tab button not found, skipping hunt tab select"); return true; }
+                            var enabled = uld->NodeList[2]->Alpha_2 == 255;
+                            var selected = uld->NodeList[4]->GetAsAtkImageNode()->PartId == 0;
                             if (enabled)
                             {
                                 if (!selected)

@@ -13,9 +13,9 @@ public static class HuntMessageFormatting
 
         return Regex.Replace(input, pattern, match =>
         {
-            long unixTimestamp = long.Parse(match.Groups[1].Value);
-            
-            var dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).LocalDateTime;
+            if (!long.TryParse(match.Groups[1].Value, out var secs) || !TryFromUnixSeconds(secs, out var dto)) return match.Value;
+            long unixTimestamp = dto.ToUnixTimeSeconds();
+            var dateTime = dto.LocalDateTime;
             PluginLog.Verbose($"Posted Time:  {unixTimestamp}");
             string convertedTime = dateTime.ToString("hh:mm tt", CultureInfo.GetCultureInfo("en-US"));
             PluginLog.Verbose($"converted time: {convertedTime}");
@@ -31,11 +31,18 @@ public static class HuntMessageFormatting
 
         return Regex.Replace(input, pattern, match =>
         {
-
-            long unixTimestamp = long.Parse(match.Groups[1].Value);
-            var dateTime = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).UtcDateTime;
-            return GetRelativeTime(dateTime);
+            if (!long.TryParse(match.Groups[1].Value, out var secs) || !TryFromUnixSeconds(secs, out var dto)) return match.Value;
+            return GetRelativeTime(dto.UtcDateTime);
         });
+    }
+
+    // Server text is untrusted: out-of-range epochs must not throw (this runs inside Draw).
+    public static bool TryFromUnixSeconds(long secs, out DateTimeOffset dto)
+    {
+        dto = default;
+        if (secs < DateTimeOffset.MinValue.ToUnixTimeSeconds() || secs > DateTimeOffset.MaxValue.ToUnixTimeSeconds()) return false;
+        dto = DateTimeOffset.FromUnixTimeSeconds(secs);
+        return true;
     }
 
     public static string RemoveDiscordEmojis(string input)
@@ -46,7 +53,8 @@ public static class HuntMessageFormatting
 
     public static string ConvertTime(long epochTime)
     {
-        DateTime dateTime = DateTimeOffset.FromUnixTimeSeconds(epochTime).ToLocalTime().DateTime;
+        if (!TryFromUnixSeconds(epochTime, out var dto)) return epochTime.ToString(CultureInfo.InvariantCulture);
+        DateTime dateTime = dto.LocalDateTime;
 
         PluginLog.Verbose($"Posted Time:  {epochTime}");
         string convertedTime = dateTime.ToString("hh:mm tt", CultureInfo.GetCultureInfo("en-US"));

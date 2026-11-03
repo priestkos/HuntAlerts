@@ -354,12 +354,15 @@ public class ConfigWindow : Window, IDisposable
 
                     if (ImGui.Checkbox($"{display}  {channel.Command}", ref selected))
                     {
-                        if (channel.Command.Contains("cwls"))
+                        if (channel.Command.StartsWith("/cwl"))
                         {
                             if (selected)
                                 playerConfig.RegionCWLSChannels.Add(channel.Command);
                             else
+                            {
                                 playerConfig.RegionCWLSChannels.Remove(channel.Command);
+                                playerConfig.RelayChannels.Remove(channel.Command); // older builds stored CWLS here
+                            }
                         } else
                         {
                             if (selected)

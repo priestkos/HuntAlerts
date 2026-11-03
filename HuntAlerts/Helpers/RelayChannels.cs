@@ -69,7 +69,7 @@ public static class RelayChannels
         var text = BuildRelayText(entry, withFlag);
         if (string.IsNullOrWhiteSpace(text)) return;
         var line = $"{(HuntAlerts.C.EchoTestRelay ? "/echo " : "")}{channelCommand} {text}";
-        if (line.Length > 500) line = line.Substring(0, 500);
+        line = RelayFormat.TruncateUtf8(line, 500); // Chat.SendMessage limit is 500 UTF-8 bytes
         try
         {
             Chat.SendMessage(line);

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- Pure plugin files only: no Dalamud / ECommons references. -->
+  <ItemGroup>
+    <Compile Include="../../HuntAlerts/Helpers/RelayFormat.cs" />
+    <Compile Include="../../HuntAlerts/Messaging/HuntMessageFormatting.cs" />
+  </ItemGroup>
+
+</Project>

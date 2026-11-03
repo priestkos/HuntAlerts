@@ -167,6 +167,7 @@ public sealed class HuntSocketConnection : IDisposable
 
     public Task ProcessMessage(string messageString)
     {
+        if (string.IsNullOrEmpty(messageString)) return Task.CompletedTask;
         try
         {
             if (messageString.StartsWith("Alert:"))
@@ -700,8 +701,9 @@ public sealed class HuntSocketConnection : IDisposable
         {
             cancellationTokenSource?.Cancel();
             cancellationTokenSource?.Dispose();
+            // Disconnect before Dispose, bounded so unload can't hang on a dead server.
+            socket?.DisconnectAsync().Wait(TimeSpan.FromSeconds(2));
             socket?.Dispose();
-            socket?.DisconnectAsync().GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
