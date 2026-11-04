@@ -16,6 +16,8 @@ Author of this build: PriestKos — the plugin and the idea are Asuna's, this is
 
 `/huntalerts` · Dalamud API 15 · .NET 10
 
+> **No support will be provided. This software is to be used as is, without warranty of any kind.**
+
 ## What it does
 
 Notifies you when hunt trains are starting soon and when S ranks are found, on NA/EU/OCE/JP worlds, from the same alert
