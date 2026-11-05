@@ -64,7 +64,7 @@ Every user-facing window and slash command in the plugin is shown above. Non-UI 
 
 ### Mock-up video
 
-The clip below is a **mock-up walkthrough** of the same HTML UI sources — **not** captures from the live game. It opens with an on-screen disclaimer and tours each mock-up with short captions, eased scene transitions, and scripted pointer interactions (sidebar tabs, toggles, relay picker).
+A short **mock-up walkthrough** (~15 s, H.264 1280×720) cross-fades through the same HTML UI scenes with a gold **Mock-up** banner, on-screen beat labels, and bottom captions — not captures from the live game.
 
 ![Mock-up walkthrough preview](docs/videos/mockup-walkthrough.gif)
 

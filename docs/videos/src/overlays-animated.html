@@ -55,6 +55,16 @@
       line.style.transform = 'translateY(4px)';
     });
     window.walkthrough = { showToast, showChatLines, pulseNav };
+    window.seekScene = function (localT) {
+      document.getElementById('toast').classList.remove('visible');
+      ['chat1', 'chat2', 'chat3'].forEach((id) => {
+        document.getElementById(id).style.opacity = '0';
+      });
+      document.getElementById('nav-arrow').style.transform = '';
+      if (localT >= 0.25) showToast();
+      if (localT >= 0.75) showChatLines();
+      if (localT >= 1.45) pulseNav();
+    };
   </script>
 </body>
 </html>
