@@ -128,6 +128,14 @@
         cb.checked = !cb.checked;
       },
     };
+    window.seekScene = function (localT) {
+      selectPanel('general', false);
+      if (localT >= 0.85) selectPanel('trains', false);
+      if (localT >= 1.65) {
+        selectPanel('general', false);
+        document.getElementById('flag-link').checked = true;
+      }
+    };
   </script>
 </body>
 </html>

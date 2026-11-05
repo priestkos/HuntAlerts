@@ -62,5 +62,14 @@
       </div>
     </div>
   </div>
+  <script>
+    window.seekScene = function (localT) {
+      document.querySelectorAll('.card').forEach((c) => c.classList.remove('card-highlight'));
+      if (localT >= 0.35) {
+        const first = document.querySelector('.imgui-body .card');
+        if (first) first.classList.add('card-highlight');
+      }
+    };
+  </script>
 </body>
 </html>

@@ -62,6 +62,17 @@
         el.style.fontWeight = '600';
       },
     };
+    window.seekScene = function (localT) {
+      document.getElementById('relay-menu').classList.remove('open');
+      const preview = document.getElementById('relay-preview');
+      preview.style.color = '';
+      preview.style.fontWeight = '';
+      if (localT >= 0.55) document.getElementById('relay-menu').classList.add('open');
+      if (localT >= 1.05) {
+        preview.style.color = '#ffc68a';
+        preview.style.fontWeight = '600';
+      }
+    };
   </script>
 </body>
 </html>

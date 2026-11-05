@@ -45,7 +45,7 @@
         </div>
       </div>
       <div class="imgui-window">
-        <div class="imgui-titlebar"><span>Debug &amp; Notice</span></div>
+        <div class="imgui-titlebar"><span>HuntAlerts - Notice</span></div>
         <div class="imgui-body">
           <div class="section-header">Simulate Hunt Message</div>
           <div>Type <span class="combo">Hunt Train</span></div>
@@ -53,7 +53,7 @@
           <div style="margin:4px 0"><span class="btn btn-accent" id="send-test" style="font-size:11px">✉ Send Test Hunt</span></div>
           <div class="separator"></div>
           <div style="color:#90d890;font-weight:600">👥 Alerting Restored</div>
-          <p style="font-size:11px;margin-top:6px">One-time notice window (HuntAlerts - Notice)</p>
+          <p style="font-size:11px;margin-top:6px;line-height:1.4">The plugin is back up and fully operational. Hunt train and S-rank alerts are coming through in-game again.</p>
           <span class="btn btn-success" style="font-size:11px;margin-top:8px">✓ Understood</span>
         </div>
       </div>
@@ -75,6 +75,12 @@
         btn.classList.add('btn-pressed');
         setTimeout(() => btn.classList.remove('btn-pressed'), 400);
       },
+    };
+    window.seekScene = function (localT) {
+      document.getElementById('world-sargatanas').checked = false;
+      document.getElementById('send-test').classList.remove('btn-pressed');
+      if (localT >= 0.55) document.getElementById('world-sargatanas').checked = true;
+      if (localT >= 1.15) document.getElementById('send-test').classList.add('btn-pressed');
     };
   </script>
 </body>

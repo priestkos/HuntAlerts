@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>HuntAlerts mock-up walkthrough</title>
+    <link rel="stylesheet" href="/screenshots/src/imgui-common.css" />
+    <style>
+      html,
+      body {
+        width: 1280px;
+        height: 720px;
+        margin: 0;
+        overflow: hidden;
+        position: relative;
+        background: #1a1a1a;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+
+      .scene iframe {
+        width: 1280px;
+        height: 720px;
+        border: none;
+        display: block;
+        background: #1a1a1a;
+      }
+
+      .beat-label {
+        position: absolute;
+        top: 56px;
+        left: 24px;
+        z-index: 9000;
+        padding: 10px 18px;
+        border-radius: 6px;
+        font: 700 18px/1.25 "Segoe UI", system-ui, sans-serif;
+        color: #ffe8c8;
+        background: rgba(40, 24, 8, 0.92);
+        border: 1px solid #c08040;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        pointer-events: none;
+        max-width: 720px;
+      }
+
+      .beat-label.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .video-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 9000;
+        padding: 14px 20px 16px;
+        font-size: 15px;
+        font-weight: 600;
+        text-align: center;
+        color: #fff;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.5) 70%, transparent 100%);
+        text-shadow: 0 1px 4px #000;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mockup-banner">Mock-up</div>
+    <div id="beat-label" class="beat-label"></div>
+
+    <div id="scene1" class="scene">
+      <iframe src="/screenshots/src/01-recent-hunts.html" title="Recent Hunts"></iframe>
+    </div>
+    <div id="scene2" class="scene">
+      <iframe src="/videos/src/notification-interactive.html" title="Notification"></iframe>
+    </div>
+    <div id="scene3" class="scene">
+      <iframe src="/videos/src/overlays-animated.html" title="Overlays"></iframe>
+    </div>
+    <div id="scene4" class="scene">
+      <iframe src="/videos/src/settings-interactive.html" title="Settings"></iframe>
+    </div>
+    <div id="scene5" class="scene">
+      <iframe src="/videos/src/filters-interactive.html" title="Filters and debug"></iframe>
+    </div>
+
+    <div class="video-caption" id="caption">HuntAlerts — mock-up walkthrough</div>
+
+    <script>
+      const scenes = [
+        {
+          id: 'scene1',
+          start: 0,
+          end: 3.1,
+          beat: 'Recent Hunts — /huntalerts',
+          caption: 'Recent Hunts — cached alert cards, Clear, settings & snooze in the title bar',
+        },
+        {
+          id: 'scene2',
+          start: 2.7,
+          end: 6.1,
+          beat: 'Notification — actions & Relay',
+          caption: 'Notification window — Teleport, Flag, Party Finder, Nav, Relay preview & channel picker',
+        },
+        {
+          id: 'scene3',
+          start: 5.7,
+          end: 9.1,
+          beat: 'Overlays — toast, arrow & chat',
+          caption: 'Toast banner, navigation arrow (distance label) & chat alert lines',
+        },
+        {
+          id: 'scene4',
+          start: 8.7,
+          end: 12.1,
+          beat: 'Settings — General & filters',
+          caption: 'Settings — relay templates, snooze, toast options & hunt train filters',
+        },
+        {
+          id: 'scene5',
+          start: 11.7,
+          end: 15,
+          beat: 'Connection, debug & notice',
+          caption: 'Train worlds, socket status, Debug simulate hunt & Alerting Restored notice',
+        },
+      ];
+
+      function easeOutCubic(x) {
+        return 1 - Math.pow(1 - x, 3);
+      }
+
+      function sceneMotion(t, start, end) {
+        const fade = 0.42;
+        let opacity = 0;
+        let ty = 10;
+        if (t < start) {
+          opacity = 0;
+          ty = 10;
+        } else if (t > end) {
+          opacity = 0;
+          ty = -8;
+        } else if (t < start + fade) {
+          const p = (t - start) / fade;
+          const e = easeOutCubic(p);
+          opacity = e;
+          ty = 10 * (1 - e);
+        } else if (t > end - fade) {
+          const p = (end - t) / fade;
+          const e = easeOutCubic(p);
+          opacity = e;
+          ty = -8 * (1 - e);
+        } else {
+          opacity = 1;
+          ty = 0;
+        }
+        return { opacity, ty };
+      }
+
+      function callSeekScene(sceneId, localT) {
+        const iframe = document.querySelector(`#${sceneId} iframe`);
+        if (!iframe || !iframe.contentWindow) return;
+        const fn = iframe.contentWindow.seekScene;
+        if (typeof fn === 'function') fn(localT);
+      }
+
+      window.seekWalkthrough = function (t) {
+        let active = null;
+        for (const s of scenes) {
+          const el = document.getElementById(s.id);
+          const { opacity, ty } = sceneMotion(t, s.start, s.end);
+          el.style.opacity = String(opacity);
+          el.style.transform = `translateY(${ty}px)`;
+          if (opacity > 0.02 && t >= s.start && t <= s.end) {
+            active = s;
+            callSeekScene(s.id, t - s.start);
+          }
+        }
+
+        const beatEl = document.getElementById('beat-label');
+        if (active) {
+          beatEl.textContent = active.beat;
+          beatEl.classList.add('visible');
+          document.getElementById('caption').textContent = active.caption;
+        } else {
+          beatEl.classList.remove('visible');
+          document.getElementById('caption').textContent = 'HuntAlerts — mock-up walkthrough';
+        }
+      };
+    </script>
+  </body>
+</html>
