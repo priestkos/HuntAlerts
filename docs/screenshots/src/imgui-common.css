@@ -99,6 +99,7 @@ body {
   border-left: 4px solid #c08040;
 }
 .card-srank { border-left-color: #4040a0; }
+.card-row2 { margin-top: 6px; }
 .card-highlight {
   outline: 2px solid #f2b36d;
   outline-offset: 2px;
@@ -189,8 +190,7 @@ table.world-grid td { padding: 2px 8px; font-size: 12px; }
 .mockup-banner {
   position: fixed;
   top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 16px;
   z-index: 100002;
   background: linear-gradient(180deg, #a07028 0%, #6a4818 100%);
   color: #ffe8c8;
@@ -205,15 +205,36 @@ table.world-grid td { padding: 2px 8px; font-size: 12px; }
 }
 .screenshot-caption {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 14px;
+  left: 16px;
   z-index: 100001;
-  padding: 14px 24px 18px;
-  font: 600 15px/1.35 "Segoe UI", system-ui, sans-serif;
-  text-align: center;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font: 600 14px/1.35 "Segoe UI", system-ui, sans-serif;
   color: #fff;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.55) 72%, transparent 100%);
+  background: rgba(0, 0, 0, 0.78);
+  border: 1px solid #555;
   text-shadow: 0 1px 4px #000;
   pointer-events: none;
+}
+
+.btn-small { padding: 1px 6px; font-size: 11px; }
+.dc-on { background: #408040; }
+.imgui-popup {
+  background: #262626;
+  border: 1px solid #555;
+  border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.55);
+  padding: 4px 0;
+  font-size: 12px;
+}
+.imgui-popup div { padding: 1px 10px; white-space: pre; }
+.imgui-tooltip {
+  background: #262626;
+  border: 1px solid #555;
+  border-radius: 3px;
+  padding: 5px 8px;
+  font-size: 12px;
+  white-space: pre;
+  box-shadow: 0 6px 18px rgba(0,0,0,.55);
 }

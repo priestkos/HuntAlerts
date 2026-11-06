@@ -4,16 +4,23 @@
   <meta charset="utf-8" />
   <link rel="stylesheet" href="imgui-common.css" />
   <title>03 Overlays</title>
+  <style>
+    .toast { border-left-color: #4040a0; background: linear-gradient(90deg, rgba(30,30,92,.95), rgba(20,18,14,.95)); }
+    .chat-log { bottom: 70px; width: 560px; }
+    /* default chat colours: train Blue (57), S rank Purple (48), kill Red (16) */
+    .chat-train { color: #8ab8ff; }
+    .chat-srank { color: #c89aff; }
+  </style>
 </head>
 <body>
   <div class="scene-backdrop">
-    <div class="toast">
+    <div class="toast" id="toast">
       <span class="badge badge-srank">S RANK</span>
       <span>Endwalker S Rank</span>
       <span class="subtle">·</span>
       <span class="badge badge-world">Example World</span>
       <span class="badge badge-srank">Aether</span>
-      <span class="subtle">· 03:05 PM</span>
+      <span class="subtle">·  03:05 PM</span>
     </div>
     <div class="nav-arrow">
       <svg width="48" height="48" viewBox="0 0 48 48">
@@ -22,10 +29,18 @@
     </div>
     <div class="dist-label">142y</div>
     <div class="chat-log">
-      <div class="chat-line chat-train">[HuntAlerts] Example World TRAIN: Yak T'el (23.10, 23.50) i2</div>
-      <div class="chat-line chat-srank">[HuntAlerts] S Rank Example World: Thavnair (18.2, 12.4)</div>
-      <div class="chat-line subtle">[HuntAlerts] S Rank kill — Example Mob on Example World</div>
+      <div class="chat-line chat-train">Dawntrail train starting on Example World! (Click for info)</div>
+      <div class="chat-line chat-srank">Endwalker S Rank Example Mob spawned on Example World! (Click for info)</div>
+      <div class="chat-line" style="color:#ff8a8a">Endwalker S Rank Example Mob on Example World was killed at 03:21 PM.</div>
     </div>
   </div>
+  <script>
+    window.seekScene = function (localT) {
+      document.getElementById('toast').style.opacity = localT >= 0.25 ? '1' : '0';
+      document.querySelectorAll('.chat-line').forEach((line, i) => {
+        line.style.opacity = localT >= 0.75 + i * 0.38 ? '1' : '0';
+      });
+    };
+  </script>
 </body>
 </html>

@@ -5,8 +5,12 @@
   <link rel="stylesheet" href="imgui-common.css" />
   <title>02 Notification</title>
   <style>
-    .w-notify { width: 540px; }
+    .w-notify { width: 540px; position: relative; }
     .hero { font-size: 15px; margin-bottom: 8px; }
+    .detail { white-space: pre-line; line-height: 1.45; min-height: 190px; }
+    #relay-tooltip { position: absolute; left: 800px; top: 358px; }
+    #relay-popup { position: absolute; left: 852px; top: 230px; display: none; }
+    #relay-popup div { font-size: 11px; line-height: 15px; }
   </style>
 </head>
 <body>
@@ -21,13 +25,17 @@
           <span class="badge badge-train">TRAIN</span> Dawntrail train
         </div>
         <div style="margin-bottom:12px">
-          <span class="badge badge-kind">DT</span>
+          <span class="badge badge-kind">Dawntrail</span>
           <span class="badge badge-world">Example World</span>
-          <span class="badge badge-kind">i2</span>
         </div>
-        <div style="min-height:120px;line-height:1.45">
-          DT train starting at Yak T'el (23.10, 23.50) in ~8 minutes — Example relay feed text with relative timestamps.
-        </div>
+        <div class="detail">Kind: Hunt Train
+Hunt: Dawntrail
+Start Zone: Yak T'el
+Aetheryte: Iq Br'aax
+World: Example World
+Posted: 02:14 PM
+
+Dawntrail train starting at Yak T'el in 8 minutes</div>
         <div class="separator"></div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
           <span class="btn btn-accent">🚀 Teleport</span>
@@ -35,13 +43,45 @@
           <span class="btn btn-info">👥 Party Finder</span>
           <span class="btn btn-accent">➤ Nav</span>
           <span class="btn btn-success">📢 Relay</span>
-          <span class="btn btn-success" style="padding:4px 6px">▲</span>
+          <span class="btn btn-success" style="padding:4px 6px;margin-left:-4px">▲</span>
         </div>
-        <p class="subtle" style="margin-top:10px;font-size:11px">
-          Relay preview: Example World TRAIN: Yak T'el (23.10, 23.50) i2
-        </p>
       </div>
     </div>
   </div>
+  <div class="imgui-tooltip" id="relay-tooltip">Relay to Party, Linkshell 1
+Example World TRAIN: &lt;flag&gt;</div>
+  <div class="imgui-popup" id="relay-popup">
+          <div>Say  /s</div>
+          <div>Yell  /y</div>
+          <div>Shout  /sh</div>
+          <div>Party  /p</div>
+          <div>Alliance  /a</div>
+          <div>Free Company  /fc</div>
+          <div>Linkshell 1 Hunt LS  /l1</div>
+          <div>Linkshell 2  /l2</div>
+          <div>Linkshell 3  /l3</div>
+          <div>Linkshell 4  /l4</div>
+          <div>Linkshell 5  /l5</div>
+          <div>Linkshell 6  /l6</div>
+          <div>Linkshell 7  /l7</div>
+          <div>Linkshell 8  /l8</div>
+          <div>CWLS 1 Hunt CWLS  /cwl1</div>
+          <div>CWLS 2  /cwl2</div>
+          <div>CWLS 3  /cwl3</div>
+          <div>CWLS 4  /cwl4</div>
+          <div>CWLS 5  /cwl5</div>
+          <div>CWLS 6  /cwl6</div>
+          <div>CWLS 7  /cwl7</div>
+          <div>CWLS 8  /cwl8</div>
+          <div>Echo (test)  /echo</div>
+  </div>
+  <script>
+    window.seekScene = function (localT) {
+      const tip = document.getElementById('relay-tooltip');
+      const pop = document.getElementById('relay-popup');
+      pop.style.display = localT >= 0.55 && localT < 1.7 ? 'block' : 'none';
+      tip.style.display = localT >= 1.7 ? 'block' : 'none';
+    };
+  </script>
 </body>
 </html>

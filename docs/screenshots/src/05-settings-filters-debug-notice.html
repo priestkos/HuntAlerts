@@ -4,70 +4,135 @@
   <meta charset="utf-8" />
   <link rel="stylesheet" href="imgui-common.css" />
   <title>05 Filters Debug</title>
+  <style>
+    .frame-root { padding: 60px 16px 56px; }
+    .mosaic { grid-template-columns: repeat(4, 1fr); height: 604px; gap: 10px; }
+    .mosaic .imgui-window { min-height: 0; overflow: hidden; }
+    .mosaic .imgui-body { font-size: 11px; padding: 6px 9px; }
+    .mosaic .section-header { margin: 4px 0 3px; padding-bottom: 2px; }
+    .mosaic .checkbox-row { margin: 2px 0; }
+    .mosaic input[type=checkbox], .mosaic input[type=radio] { width: 11px; height: 11px; margin: 0 3px 0 0; vertical-align: -1px; accent-color: #b5853d; }
+    .mosaic .radio-row { margin: 2px 0; }
+    .mosaic .subtle { margin: 2px 0; }
+    .mosaic .row { margin: 3px 0; display: flex; align-items: center; gap: 4px; }
+    .mosaic .combo, .mosaic .input { font-size: 11px; padding: 1px 5px; }
+    .mosaic .w { display: inline-block; width: 120px; }
+    .mosaic .input { max-width: 100%; }
+    .mosaic .btn { font-size: 11px; }
+    .btn-plain { background: #3a3a3a; border: 1px solid #555; }
+    table.world-grid td { padding: 1px 2px; font-size: 11px; white-space: nowrap; }
+    .log { border: 1px solid #444; border-radius: 3px; padding: 4px 6px; min-height: 120px; }
+    .notice p { margin-top: 6px; line-height: 1.35; }
+  </style>
 </head>
 <body>
   <div class="frame-root">
     <div class="mosaic">
       <div class="imgui-window">
-        <div class="imgui-titlebar"><span>HuntAlerts — Hunt Trains</span></div>
+        <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
         <div class="imgui-body">
-          <div class="section-header">Hunt Train Notifications</div>
-          <div class="checkbox-row"><input type="checkbox" checked /> Centurio (ARR / HW / SB)</div>
-          <div class="checkbox-row"><input type="checkbox" checked /> Shadowbringers</div>
-          <div class="checkbox-row"><input type="checkbox" checked /> Endwalker</div>
-          <div class="checkbox-row"><input type="checkbox" checked /> Dawntrail</div>
-          <div class="section-header">Hunt Train Scope</div>
-          <div class="radio-row"><input type="radio" name="scope" checked /> All configured datacenters/worlds</div>
-          <div class="radio-row"><input type="radio" name="scope" /> Current datacenter only</div>
+            <div class="section-header">Hunt Train Notifications</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Centurio (ARR / HW / SB)</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Shadowbringers</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Endwalker</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Dawntrail</div>
+            <div class="section-header">Hunt Train Scope</div>
+            <div class="radio-row"><input type="radio" name="scope" checked /> All configured datacenters/worlds</div>
+            <div class="radio-row"><input type="radio" name="scope" /> Current datacenter only</div>
+            <div class="radio-row"><input type="radio" name="scope" /> Current world only</div>
+            <div class="radio-row"><input type="radio" name="scope" /> Home world only</div>
         </div>
       </div>
       <div class="imgui-window">
-        <div class="imgui-titlebar"><span>HuntAlerts — Train Worlds</span></div>
+        <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
         <div class="imgui-body">
-          <div class="section-header">Hunt Train Worlds</div>
-          <input class="input" placeholder="Filter worlds..." style="max-width:220px;margin-bottom:6px" />
-          <div class="accent">Aether <span class="subtle">(NA) 8/8 enabled</span>
-            <span style="float:right"><span class="btn btn-accent" style="font-size:10px;padding:2px 6px">DC On</span></span>
-          </div>
-          <table class="world-grid">
-            <tr><td><input type="checkbox" checked /> Adamantoise</td><td><input type="checkbox" checked /> Cactuar</td></tr>
-            <tr><td><input type="checkbox" checked /> Faerie</td><td><input type="checkbox" /> Sargatanas</td></tr>
-          </table>
+            <div class="section-header">Hunt Train Worlds</div>
+            <input class="input" placeholder="Filter worlds..." style="max-width:220px;margin-bottom:6px" />
+            <div><span class="accent">Aether</span> <span class="subtle" id="aether-count">(NA)  7/8 enabled</span></div>
+            <div style="text-align:right;margin:2px 0"><span class="btn btn-small dc-on">DC On</span> <span class="btn btn-small btn-plain">All</span> <span class="btn btn-small btn-plain">None</span></div>
+            <div class="separator" style="margin:3px 0"></div>
+            <table class="world-grid"><tr><td><input type="checkbox" checked /> Adamantoise</td><td><input type="checkbox" checked /> Cactuar</td><td><input type="checkbox" checked /> Faerie</td></tr><tr><td><input type="checkbox" checked /> Gilgamesh</td><td><input type="checkbox" checked /> Jenova</td><td><input type="checkbox" checked /> Midgardsormr</td></tr><tr><td><input type="checkbox" id="world-sargatanas" /> Sargatanas</td><td><input type="checkbox" checked /> Siren</td></tr></table>
         </div>
       </div>
       <div class="imgui-window">
-        <div class="imgui-titlebar"><span>HuntAlerts — S Ranks &amp; Connection</span></div>
+        <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
         <div class="imgui-body">
-          <div class="section-header">S Rank Options</div>
-          <div class="checkbox-row"><input type="checkbox" checked /> S Ranks Enabled</div>
-          <div class="checkbox-row"><input type="checkbox" checked /> Show kill notifications</div>
-          <div class="section-header">S Rank Worlds</div>
-          <input class="input" placeholder="Filter worlds..." style="max-width:180px;margin-bottom:4px" />
-          <div class="subtle" style="font-size:10px">Crystal (EU) — world checkboxes when scope is All configured…</div>
-          <div class="section-header">Integrations</div>
-          <div class="checkbox-row"><input type="checkbox" checked /> Enable Lifestream Integration</div>
-          <div class="checkbox-row"><input type="checkbox" checked /> Ctrl-Click messages to teleport</div>
-          <div class="section-header">Connection</div>
-          <span class="pill pill-connected">CONNECTED</span>
-          <span class="subtle"> · 2m ago</span>
-          <div style="margin-top:8px"><span class="btn btn-accent" style="font-size:11px">🔄 Reconnect</span></div>
-          <div class="subtle" style="margin-top:8px;font-size:10px">14:02:11 [OK] Connected to hunt alert socket</div>
+            <div class="section-header">S Rank Options</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> S Ranks Enabled</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Show kill notifications</div>
+            <div style="margin-top:6px">S Rank Notifications</div>
+            <div class="separator" style="margin:3px 0"></div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Centurio (ARR / HW / SB)</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Shadowbringers</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Endwalker</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Dawntrail</div>
+            <div class="section-header">S Rank Scope</div>
+            <div class="radio-row"><input type="radio" name="sscope" /> All configured datacenters/worlds (use the S Rank Worlds tab)</div>
+            <div class="radio-row"><input type="radio" name="sscope" checked /> Current datacenter only</div>
+            <div class="radio-row"><input type="radio" name="sscope" /> Current world only</div>
+            <div class="radio-row"><input type="radio" name="sscope" /> Home world only</div>
         </div>
       </div>
       <div class="imgui-window">
-        <div class="imgui-titlebar"><span>HuntAlerts - Notice</span></div>
+        <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
         <div class="imgui-body">
-          <div class="section-header">Simulate Hunt Message</div>
-          <div>Type <span class="combo">Hunt Train</span></div>
-          <div style="margin:4px 0">World <input class="input" value="Example World" style="max-width:140px" /></div>
-          <div style="margin:4px 0"><span class="btn btn-accent" style="font-size:11px">✉ Send Test Hunt</span></div>
-          <div class="separator"></div>
-          <div style="color:#90d890;font-weight:600">👥 Alerting Restored</div>
-          <p style="font-size:11px;margin-top:6px;line-height:1.4">The plugin is back up and fully operational. Hunt train and S-rank alerts are coming through in-game again.</p>
-          <span class="btn btn-success" style="font-size:11px;margin-top:8px">✓ Understood</span>
+            <div class="section-header">S Rank Worlds</div>
+            <div class="subtle">World selection is ignored because the S Rank scope is not "All configured datacenters/worlds". Switch on the S Ranks tab to use this list.</div>
+        </div>
+      </div>
+      <div class="imgui-window">
+        <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
+        <div class="imgui-body">
+            <div class="section-header">Integrations (Changes take effect next hunt message)</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Enable Lifestream Integration</div>
+            <div class="checkbox-row"><input type="checkbox" checked /> Ctrl-Click messages to teleport</div>
+        </div>
+      </div>
+      <div class="imgui-window">
+        <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
+        <div class="imgui-body">
+            <div class="section-header">Connection</div>
+            <div><span class="pill pill-connected">CONNECTED</span> <span class="subtle">  ·  2m ago</span></div>
+            <div style="margin-top:8px"><span class="btn btn-accent btn-small">🔄 Reconnect</span></div>
+            <div class="section-header">Recent Activity</div>
+            <div class="log"><div><span class="subtle">14:02:11</span> <span style="color:#90d080">[OK]</span> Connected.</div><div><span class="subtle">14:02:10</span> <span class="subtle">[INFO]</span> Connecting...</div></div>
+        </div>
+      </div>
+      <div class="imgui-window">
+        <div class="imgui-titlebar"><span>HuntAlerts</span><span class="titlebar-btns">✕</span></div>
+        <div class="imgui-body">
+            <div class="section-header">Simulate Hunt Message</div>
+            <div class="subtle">Inject a fake server message through the same pipeline as a real one. Use this to test scope, kind filters, aetheryte resolution and the notification UI without waiting on the live feed.</div>
+            <div class="row"><span class="combo w">Hunt Train ▾</span> Type</div>
+            <div>Kinds</div>
+            <div class="row" style="flex-wrap:wrap"><span><input type="checkbox" /> Centurio</span> <span><input type="checkbox" /> Shadowbringers</span> <span><input type="checkbox" /> Endwalker</span> <span><input type="checkbox" checked /> Dawntrail</span></div>
+            <div class="row"><span class="input w">Example World</span> World <span class="btn btn-plain btn-small">Current</span></div>
+            <div class="row"><span class="input w">Yak T'el</span> Start Zone</div>
+            <div class="row"><span class="btn btn-accent btn-small" id="send-test">✈ Send Test Hunt</span> <span class="btn btn-warn btn-small">⌫ Reset Fields</span></div>
+            <div class="subtle" id="dbg-result" style="display:none">Dispatched train for Dawntrail on 'Example World'. Check chat / popup; verbose log captures any scope-filtering reason.</div>
+        </div>
+      </div>
+      <div class="imgui-window">
+        <div class="imgui-titlebar"><span>HuntAlerts - Notice</span><span class="titlebar-btns">✕</span></div>
+        <div class="imgui-body">
+            <div style="color:#90d890">👥 Alerting Restored</div>
+            <div class="separator"></div>
+            <div class="notice"><div style="color:#90d890">The plugin is back up and fully operational.</div><p>Good news: the data feed is live again, and hunt train and S-rank alerts are once more coming through in-game just like before.</p><p>Aether local trains will not be relayed for now. This is to reduce the stress of new conductors. Cross world trains will still be coming through.</p><p>Thank you to everyone who expressed their support and to the community members who have stepped up to provide crowdsourced data feeds.</p></div>
+            <div class="separator"></div>
+            <span class="btn btn-success btn-small">✓ Understood</span>
         </div>
       </div>
     </div>
   </div>
+  <script>
+    window.seekScene = function (localT) {
+      const on = localT >= 0.55;
+      document.getElementById('world-sargatanas').checked = on;
+      document.getElementById('aether-count').textContent = on ? '(NA)  8/8 enabled' : '(NA)  7/8 enabled';
+      const pressed = localT >= 1.15;
+      document.getElementById('send-test').style.filter = pressed ? 'brightness(1.35)' : '';
+      document.getElementById('dbg-result').style.display = pressed ? 'block' : 'none';
+    };
+  </script>
 </body>
 </html>
