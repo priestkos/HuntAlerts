@@ -220,7 +220,7 @@ public class NotifyWindow : Window
             first = false;
         }
 
-        if ((Svc.PlayerState?.IsLoaded ?? false) && Svc.PlayerState?.CurrentWorld.Value.Name.ToString() == entry.huntWorld)
+        if ((Svc.PlayerState?.IsLoaded ?? false) && Svc.PlayerState?.CurrentWorld.ValueNullable?.Name.ToString() == entry.huntWorld)
         {
             if (!first) ImGui.SameLine();
             if (Components.ActionButton(FontAwesomeIcon.Users, "Party Finder", ButtonRole.Info))

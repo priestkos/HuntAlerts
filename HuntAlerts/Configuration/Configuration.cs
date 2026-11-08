@@ -52,8 +52,8 @@ namespace HuntAlerts
         {
             get
             {
-                if (!Svc.PlayerState.IsLoaded) new HashSet<string>();
-                var region = Svc.PlayerState?.CurrentWorld.Value.DataCenter.Value.Region.RowId;
+                if (!Svc.PlayerState.IsLoaded) return new HashSet<string>();
+                var region = Svc.PlayerState?.CurrentWorld.ValueNullable?.DataCenter.ValueNullable?.Region.RowId;
                 if (region == null) return new HashSet<string>();
                 if (!_RegionCWLSChannels.TryGetValue((uint)region, out var cwchannels))
                 {
