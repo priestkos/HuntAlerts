@@ -468,10 +468,12 @@ public class ConfigWindow : Window, IDisposable
         { HuntAlerts.C.ToastAnimation = animOpts[animIdx].Value; HuntAlerts.C.Save(); }
         ImGui.SameLine();
         if (ImGui.SmallButton("Test##toastanim"))
-        {
-            var ordered = Service.MessageCacheManager.GetOrderedMessages();
-            if (ordered.Count > 0) Service.ToastWindow.Show(ordered[^1]);
-        }
+            Service.ToastWindow.Show(new HuntTrainMessage(
+                "", "new_hunt", "Dawntrail", "Hyperion",
+                "Hyperion", "", "",
+                DateTime.Now.ToString("hh:mm tt", System.Globalization.CultureInfo.GetCultureInfo("en-US")),
+                DateTimeOffset.UtcNow.ToUnixTimeSeconds(), "", 0, "", 1,
+                false, false));
         ImGui.SameLine();
         var positioning = Service.ToastWindow.PositionMode;
         if (Components.ActionButton(positioning ? FontAwesomeIcon.Check : FontAwesomeIcon.ArrowsAlt,
