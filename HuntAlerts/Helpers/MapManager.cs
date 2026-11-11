@@ -81,10 +81,9 @@ public static class MapManager
         var mapMarker = Svc.Data.GetSubrowExcelSheet<MapMarker>().AllRows()
                 .FirstOrNull(m => m.DataType == 3 && m.DataKey.RowId == rowId);
 
-        if (!Svc.Data.GetExcelSheet<Lumina.Excel.Sheets.Map>().TryGetFirst(m => m.TerritoryType.RowId == aetheryte.Territory.RowId, out var place))
-        {
-            throw new Exception();
-        }
+        // No marker or map: report "no coords" (id 0) so the caller still shows the alert.
+        if (mapMarker == null || !Svc.Data.GetExcelSheet<Lumina.Excel.Sheets.Map>().TryGetFirst(m => m.TerritoryType.RowId == aetheryte.Territory.RowId, out var place))
+            return (0, 0, 0);
             
 
         var scale = place.SizeFactor;
