@@ -175,7 +175,8 @@ public sealed class HuntSocketConnection : IDisposable
                 var alertMessage = messageString["Alert:".Length..].Trim();
                 var formatted = "HuntAlerts Admin Broadcast\n" + alertMessage;
                 var message = new SeStringBuilder().AddUiForeground(16).AddText(formatted).AddUiForegroundOff().Build();
-                PrintChat(message);
+                // Socket thread: IChatGui's queue is not thread-safe, so print on the framework thread.
+                _ = new TickScheduler(() => PrintChat(message));
                 return Task.CompletedTask;
             }
 
