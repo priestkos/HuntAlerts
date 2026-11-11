@@ -42,7 +42,8 @@ public sealed class HuntSocketConnection : IDisposable
     public record ConnectionLogEntry(DateTime TimestampUtc, string Level, string Message);
 
     private readonly List<ConnectionLogEntry> connectionLog = [];
-    public IReadOnlyList<ConnectionLogEntry> ConnectionLog => connectionLog;
+    // Written from socket threads, read from Draw: hand the UI a snapshot.
+    public IReadOnlyList<ConnectionLogEntry> ConnectionLog { get { lock (connectionLog) return connectionLog.ToArray(); } }
 
     public string ServerUri { get; }
 
@@ -60,8 +61,11 @@ public sealed class HuntSocketConnection : IDisposable
 
     private void LogConnection(string level, string message)
     {
-        connectionLog.Add(new ConnectionLogEntry(DateTime.UtcNow, level, message));
-        while (connectionLog.Count > 50) connectionLog.RemoveAt(0);
+        lock (connectionLog)
+        {
+            connectionLog.Add(new ConnectionLogEntry(DateTime.UtcNow, level, message));
+            while (connectionLog.Count > 50) connectionLog.RemoveAt(0);
+        }
     }
 
     private void Connect()
