@@ -620,7 +620,8 @@ public sealed class HuntSocketConnection : IDisposable
         public WorldRegionGroup? CurrentRegion => CurrentDatacenter?.Region.ValueNullable;
         public string CurrentWorldName => CurrentWorld?.Name.ExtractText() ?? "";
         public string HomeWorldName => HomeWorld?.Name.ExtractText() ?? "";
-        public string CurrentDatacenterName => CurrentDatacenter?.Name.ExtractText() ?? "";
+        public string CurrentDatacenterName =>
+            WorldData.TryGetWorld(CurrentWorldName, out var w) ? w.Datacenter : (CurrentDatacenter?.Name.ExtractText() ?? "");
         public string CurrentRegionName => CurrentRegion?.Name.ExtractText() ?? "";
     }
 
