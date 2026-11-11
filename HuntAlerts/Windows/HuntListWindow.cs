@@ -230,7 +230,7 @@ public class HuntListWindow : Window
             ImGui.SetCursorScreenPos(new Vector2(topLeft.X + padX, topLeft.Y + cardHeight - padY - ImGui.GetTextLineHeight() - 2f));
             Components.Badge(world, BadgeStyle.World);
             ImGui.SameLine();
-            Components.Badge(dc, BadgeStyle.SRank);
+            Components.Badge(dc ?? "", BadgeStyle.SRank);
             if (msg.instance > 1)
             {
                 ImGui.SameLine();

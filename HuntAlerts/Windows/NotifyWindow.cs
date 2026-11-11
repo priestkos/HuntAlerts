@@ -245,7 +245,7 @@ public class NotifyWindow : Window
 
 
 
-        if (Svc.PlayerState.IsLoaded)
+        if (Svc.PlayerState?.IsLoaded == true)
         {
 
             var playerConfig = HuntAlerts.C.PlayerConfig;
