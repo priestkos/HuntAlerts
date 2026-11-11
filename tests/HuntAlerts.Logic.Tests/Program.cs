@@ -84,6 +84,40 @@ Check(Run(() => HuntMessageFormatting.ConvertTime(long.MaxValue)) == long.MaxVal
 Check(Run(() => HuntMessageFormatting.ConvertTime(long.MinValue)) == long.MinValue.ToString(), "ConvertTime min out of range");
 Check(HuntMessageFormatting.ConvertTime(0) == DateTimeOffset.FromUnixTimeSeconds(0).LocalDateTime.ToString("hh:mm tt", System.Globalization.CultureInfo.GetCultureInfo("en-US")), "ConvertTime 0");
 
+// 5. Coordinates from server text: separators, decimals, padding, no match.
+foreach (var (text, x, y) in new (string, float, float)[]
+{
+    ("(12.3, 4.5)", 12.3f, 4.5f), ("12,4", 12f, 4f), ("x 7.25 31.5 y", 7.25f, 31.5f),
+    ("21.1 - 9.9", 21.1f, 9.9f), ("Il Mheg ( 30.2 , 6.1 ) i2", 30.2f, 6.1f),
+})
+{
+    var (cx, cy) = HuntMessageParsing.ExtractCoordinates(text);
+    Check(cx == x && cy == y, $"coords '{text}' -> ({cx}, {cy})");
+}
+foreach (var text in new[] { "", "no numbers here", "12" })
+    Check(HuntMessageParsing.ExtractCoordinates(text) == (null, null), $"coords none '{text}'");
+
+// 6. StripLocalized: drop the bracketed localized suffix (ASCII or full-width), trim, null-safe.
+Check(HuntMessageParsing.StripLocalized(null!) == "", "strip null");
+Check(HuntMessageParsing.StripLocalized("") == "", "strip empty");
+Check(HuntMessageParsing.StripLocalized("  Il Mheg  ") == "Il Mheg", "strip trims");
+Check(HuntMessageParsing.StripLocalized("Il Mheg [イル・メグ]") == "Il Mheg", "strip ascii bracket");
+Check(HuntMessageParsing.StripLocalized("イル・メグ［Il Mheg］") == "イル・メグ", "strip full-width bracket");
+
+// 7. ArrowWaypoint: rejects territory 0 and the (0, 0) "no coords" sentinel; Clear drops it.
+ArrowWaypoint.Clear();
+ArrowWaypoint.Set(0, 10f, 10f, "t");
+Check(!ArrowWaypoint.IsActive, "waypoint ignores territory 0");
+ArrowWaypoint.Set(816, 0f, 0f, "t");
+Check(!ArrowWaypoint.IsActive, "waypoint ignores (0,0)");
+ArrowWaypoint.Set(816, 12.5f, 0f, "chat", null!, force: true);
+Check(ArrowWaypoint.IsActive && ArrowWaypoint.TerritoryTypeId == 816 && ArrowWaypoint.MapX == 12.5f
+      && ArrowWaypoint.WorldName == "" && ArrowWaypoint.Forced && ArrowWaypoint.Source == "chat", "waypoint set");
+ArrowWaypoint.Set(817, 1f, 2f, "notification", "Ultros");
+Check(ArrowWaypoint.TerritoryTypeId == 817 && !ArrowWaypoint.Forced && ArrowWaypoint.WorldName == "Ultros", "waypoint replaced");
+ArrowWaypoint.Clear();
+Check(!ArrowWaypoint.IsActive && !ArrowWaypoint.Forced, "waypoint cleared");
+
 string Run(Func<string> f)
 {
     try { return f(); }

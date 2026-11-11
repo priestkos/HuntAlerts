@@ -11,6 +11,8 @@
   <ItemGroup>
     <Compile Include="../../HuntAlerts/Helpers/RelayFormat.cs" />
     <Compile Include="../../HuntAlerts/Messaging/HuntMessageFormatting.cs" />
+    <Compile Include="../../HuntAlerts/Messaging/HuntMessageParsing.cs" />
+    <Compile Include="../../HuntAlerts/Helpers/ArrowWaypoint.cs" />
   </ItemGroup>
 
 </Project>
