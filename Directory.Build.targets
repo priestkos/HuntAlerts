@@ -1,0 +1,7 @@
+<Project>
+  <!-- Vendored ECommons submodule: silence its two cosmetic warnings without editing the submodule.
+       CS0612 (obsolete ClientStructs API in ECommons) stays visible on purpose. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'ECommons'">
+    <NoWarn>$(NoWarn);CS9107;CS1587</NoWarn>
+  </PropertyGroup>
+</Project>
