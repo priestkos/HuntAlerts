@@ -28,6 +28,9 @@ jobs:
           Invoke-WebRequest -UseBasicParsing -Uri 'https://goatcorp.github.io/dalamud-distrib/latest.zip' -OutFile dalamud.zip
           Expand-Archive -Path dalamud.zip -DestinationPath $dest -Force
 
+      - name: Run the offline logic tests
+        run: dotnet run --project tests/HuntAlerts.Logic.Tests/HuntAlerts.Logic.Tests.csproj -c Release
+
       - name: Build huntalerts
         run: dotnet build HuntAlerts/HuntAlerts.csproj -c Release
 

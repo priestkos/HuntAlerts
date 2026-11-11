@@ -146,6 +146,14 @@ jobs:
           Expand-Archive -Path dalamud.zip -DestinationPath $dest -Force
           exit 0
 
+      - name: Run the offline logic tests
+        if: steps.auto.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          dotnet run --project tests/HuntAlerts.Logic.Tests/HuntAlerts.Logic.Tests.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          exit 0
+
       - name: Build huntalerts
         if: steps.auto.outputs.skip != 'true'
         shell: pwsh
